@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/andriaritiana/tnet_services#readme",
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "express-generator": "^4.13.4"
   }
 }
