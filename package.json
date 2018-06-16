@@ -1,0 +1,25 @@
+{
+  "name": "tnet_services",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andriaritiana/tnet_services.git"
+  },
+  "keywords": [
+    "dan_nav"
+  ],
+  "author": "DanNav",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andriaritiana/tnet_services/issues"
+  },
+  "homepage": "https://github.com/andriaritiana/tnet_services#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
