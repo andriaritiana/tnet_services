@@ -11,8 +11,8 @@ class CoreModel {
 	* Le constructeur doit toujours recevoir le nom du sous-domaine en paramètre
 	*/
 	constructor(subdomain) {
-		const config = require('./db_config');
-		const dbliste = require('./db_list');
+		const config = require('../../config/db_config');
+		const dbliste = require('../../config/db_list');
 		if(dbliste[subdomain] == undefined) {
 			this.dberror = true;
 		} else {

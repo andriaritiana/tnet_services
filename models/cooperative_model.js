@@ -1,4 +1,4 @@
-const Model = require('./base/model');
+const Model = require('./core/model');
 
 class CooperativeModel extends Model {
 
