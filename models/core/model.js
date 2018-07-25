@@ -39,10 +39,10 @@ class CoreModel {
 				var condition = _.isEmpty(data_condition) ? "true" : _.reduce(data_condition, function(cond, val, i) { return cond + (cond == undefined ? i+" = '"+val : " and "+i+" = '"+val); })
 				var champs = _.isEmpty(data_champ.length) ? "*" : _.reduce(data_champ, function(champ, val) { return champ + (champ == undefined ? "champ" : ", "+champ);});
 				var querystring = " select "+champs+" from "+table+" where "+condition;
-				var query = model.client.query(querystring);
+				//var query = model.client.query(querystring);
 				var results = [];
 				model.client.query(querystring, (err, res) => {
-					console.log(err, res)
+					//console.log(err, res)
 					if(err == null) {
 						results = res.rows;
 						resolve({status:1, message: "Données récupérées", data: results});
