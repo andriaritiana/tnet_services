@@ -27,7 +27,7 @@
     "express-generator": "^4.13.4",
     "node-walker": "^0.1.0",
     "nodemon": "^1.17.5",
-    "pg": "^6.1.0",
+    "pg": "^7.4.3",
     "underscore": "^1.9.1"
   }
 }

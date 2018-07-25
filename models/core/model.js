@@ -27,7 +27,7 @@ class CoreModel {
 	* Sélectionner des lignes d'une table
 	* @param string table (nom de la table)
 	* @param JSON data_condition (clé:valeur ex: {champ1: 12}) (champs de condition, peut être {})
-	* @param JSON data_condition (clé:valeur ex: {champ1: 12}) (champs à sélectionner, peut être {} )
+	* @param array data_champ (valeur,... ex: ["champ1","champ2"]) (champs à sélectionner, peut être [] )
 	* @return object (JSON)
 	*/
 	select(table, data_condition, data_champ) {
@@ -36,10 +36,60 @@ class CoreModel {
 			if(model.dberror) {
 				reject({status: -1, message: "Aucune base de données seléctionnée"});
 			} else {
-				var condition = _.isEmpty(data_condition) ? "true" : _.reduce(data_condition, function(cond, val, i) { return cond + (cond == undefined ? i+" = '"+val : " and "+i+" = '"+val); })
-				var champs = _.isEmpty(data_champ.length) ? "*" : _.reduce(data_champ, function(champ, val) { return champ + (champ == undefined ? "champ" : ", "+champ);});
+				var condition = model.get_valmerged(data_condition, "condition");
+				var champs = model.get_valmerged(data_champ, "champ");
 				var querystring = " select "+champs+" from "+table+" where "+condition;
-				//var query = model.client.query(querystring);
+				console.log(querystring);
+				var query = model.client.query(querystring);
+				var results = [];
+				model.client.query(querystring, (err, res) => {
+					if(err == null) {
+						results = res.rows;
+						resolve({status:1, message: "Données récupérées", data: results});
+					} else {
+						reject({status:0, message: "Erreur de récupération des données", error: err});
+					}
+					model.client.end();
+				});
+			}
+		});
+	}
+
+	/**
+	* sélectionner des lignes d'une table joignant une ou plusieurs autre(s) table(s)
+	* @param string table
+	* @param array join (ex: [["table1", "table1.champ = table2.champ", "inner"]] ou [["table1", "table1.champ = table2.champ"]] ou ["table1 on table1.champ = table2.champ"])
+	* @param JSON data_condition (clé:valeur ex: {champ1: 12}) (champs de condition, peut être {})
+	* @param array data_champ (valeur, ... ex: ["champ1", "champ2"]) (champs à sélectionner, peut être [] )
+	* @return object (JSON)
+	*/
+	select_join(table, join, data_condition, data_champ) {
+		var model = this;
+		return new Promise(function(resolve, reject) {
+			if(model.dberror) {
+				reject({status: -1, message: "Aucune base de données seléctionnée"});
+			} else {
+				var condition = model.get_valmerged(data_condition, "condition");
+				var champs = model.get_valmerged(data_champ, "champ");
+				var querystring = " select "+champs+" from "+table+" where "+condition;
+				if(!_.isEmpty(join)) {
+					var jointure = "";
+					_.each(join, function(data) {
+						if(_.isArray(data)) {
+							if(data.length == 2) {
+								jointure += "join "+data[0]+" on "+data[1]+" ";
+							} else if(data.length == 3) {
+								jointure += data[2]+"join "+data[0]+" on "+data[1]+" ";
+							} else {
+								jointure += "join "+data[0]+" ";
+							}
+						} else {
+							jointure += "join "+data+" ";
+						}
+					});
+					querystring = " select "+champs+" from "+table+" "+jointure+" where "+condition;
+				}
+				var query = model.client.query(querystring);
 				var results = [];
 				model.client.query(querystring, (err, res) => {
 					//console.log(err, res)
@@ -78,25 +128,20 @@ class CoreModel {
 						var values = "";
 						_.each(data, function(data1) {
 							if(data_row == "") {
-								data_row = _.reduce(data1, function(champ, val, i) {
-									return champ + (champ == undefined ? i: ", "+i);
-								});
+								data_row = model.get_valmerged(data1, "champ");
 							}
 							if(values == "") {
-								values = _.reduce(data1, function(valeur, val, i) {
-									return valeur + (valeur == undefined ? val : ", "+val);
-								});
+								values = model.get_valmerged(data1, "valeur");
 							} else {
-								values += "), ("._.reduce(data1, function(valeur, val, i) {
-									return valeur + (valeur == undefined ? val : ", "+val);
-								});
+								values += "), ("+ model.get_valmerged(data1, "valeur");
 							}
 						});
-						var querystring = "insert into "+table+" ("+data_row+") values("+values+")";
+						var querystring = "insert into "+table+" ("+data_row+") values("+values+") returning *";
 						model.client.query(querystring, (err, res) => {
 							//console.log(err, res)
 							if(err == null) {
-								var id = res.rows[0].id;
+								var key0 = _.keys(res.rows[0])[0];
+								var id = res.rows[0][key0];
 								resolve({status:1, message: "Données insérées", id: id});
 							} else {
 								reject({status:0, message: "Echec de l'insertion des données", error: err});
@@ -104,17 +149,15 @@ class CoreModel {
 							model.client.end();
 						});
 					} else {
-						var data_row = _.reduce(data, function(champ, val, i) {
-							return champ + (champ == undefined ? i: ", "+i);
-						});
-						var data_val = _.reduce(data, function(valeur, val, i) {
-							return valeur + (valeur == undefined ? val : ", "+val);
-						});
-						var querystring = "insert into "+table+" ("+data_row+") values("+data_val+")";
+						var data_row = model.get_valmerged(data, "champ");
+						var data_val = model.get_valmerged(data, "valeur");
+						var querystring = "insert into "+table+"("+data_row+") values("+data_val+") returning *";
+
 						model.client.query(querystring, (err, res) => {
-							//console.log(err, res)
+							//console.log( res)
 							if(err == null) {
-								var id = res.rows[0].id;
+								var key0 = _.keys(res.rows[0])[0];
+								var id = res.rows[0][key0];
 								resolve({status:1, message: "Données insérées", id: id});
 							} else {
 								reject({status:0, message: "Echec de l'insertion des données", error: err});
@@ -143,12 +186,8 @@ class CoreModel {
 				if(data_condition.length == 0 || data_update.length == 0) {
 					return {status: 0, message: "Cette action n'est pas permise"};
 				} else {
-					var condition = _.reduce(data_condition, function(cond, val, i) {
-						return cond + (cond == undefined ? i+" = '"+val : " and "+i+" = '"+val);
-					});
-					var dataset = _.reduce(data_update, function(memo, val, i) {
-						return memo + (memo == undefined ? i+" = '"+val : ", "+i+" = '"+val);
-					});
+					var condition = model.get_valmerged(data_condition, "condition");
+					var dataset = model.get_valmerged(data_update, "set");
 					var querystring = "update "+table+" set "+dataset+" where "+condition;
 					var query = model.client.query(querystring);
 					model.client.query(querystring, (err, res) => {
@@ -181,9 +220,7 @@ class CoreModel {
 				if(data_condition.length == 0) {
 					return {status: 0, message: "Cette action n'est pas permise"};
 				} else {
-					var condition = _.reduce(data_condition, function(cond, val, i) {
-						return cond + (cond == undefined ? i+" = '"+val : " and "+i+" = '"+val);
-					});
+					var condition = model.get_valmerged(data_condition, "condition");
 					var querystring = "delete from "+table+" where "+condition;
 					var query = this.client.query(querystring);
 					model.client.query(querystring, (err, res) => {
@@ -199,6 +236,75 @@ class CoreModel {
 				}
 			}
 		});
+	}
+
+	/**
+	* Réduit un array ou un objet à un string séparé par des virgules ou and selon le type
+	*/
+	get_valmerged(data, type) {
+		if(type == "champ") {
+			 if(_.isArray(data)) {
+				if(data.length >= 1) {
+					return _.reduce(data, function(champ, val, i) {
+						return champ + ", "+val;
+					});
+				} else {
+					return "*";
+				}
+			} else {
+				if(_.keys(data).length > 1) {
+					return _.reduce(data, function(champ, val, i) {
+						if(champ.includes(', ')) {
+							return champ + ", "+i;
+						} else {
+							return _.keys(data)[0]+", "+i;
+						}
+					});
+				} else if(_.keys(data).length == 1) {
+					return _.keys(data)[0];
+				} else { //vide
+					return "*";
+				}
+			}
+		} else if(type == "valeur") {
+			if(_.keys(data).length > 1) {
+				return _.reduce(data, function(valeur, val, i) {
+					if((valeur+"").includes("', ")) {
+						return valeur + ", '"+val+"'";
+					} else {
+						return "'"+valeur+"', '"+val+"'";
+					}
+				});
+			} else {
+				return "'"+data[_.keys(data)[0]]+"'";
+			}
+		} else if(type == "condition") {
+			if(_.keys(data).length > 1) {
+				_.reduce(data_condition, function(cond, val, i) {
+					if((valeur+"").includes("' and")) {
+						return cond + " and "+i+" = '"+val+"'";
+					} else {
+						return _.keys(data)[0]+" = '"+cond+"' and "+i+" = '"+val+"'";
+					}
+				});
+			} else if(_.keys(data).length == 1) {
+				return _.keys(data)[0]+" = '"+data[_.keys(data)[0]]+"'";
+			} else { //vide
+				return "true";
+			}
+		} else { //type == "set"
+			if(_.keys(data).length > 1) {
+				_.reduce(data_condition, function(cond, val, i) {
+					if((valeur+"").includes("', ")) {
+						return cond + ", "+i+" = '"+val+"'";
+					} else {
+						return _.keys(data)[0]+" = '"+cond+"', "+i+" = '"+val+"'";
+					}
+				});
+			} else if(_.keys(data).length == 1) {
+				return _.keys(data)[0]+" = '"+data[_.keys(data)[0]]+"'";
+			}
+		}
 	}
 }
 module.exports = CoreModel;
