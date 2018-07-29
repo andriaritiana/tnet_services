@@ -13,4 +13,31 @@ router.get('/cooperative', function (req, res) {
     });
 })
 
+router.post("/cooperative/add", function(req, res) {
+  coop = {
+    coop_nom: req.body.coop_nom,
+    coop_adresse: req.body.coop_adresse,
+    coop_etat_parametre: req.body.coop_etat_parametre
+  }
+  modelCotisse.add_cooperative(coop).then( (response) => {
+    res.json(response);
+  }, (error) => {
+    res.json(error)
+  });
+});
+
+router.post("/cooperative/update", function (req, res) {
+  id = { coop_id: req.body.coop_id };
+  cooperatives = {
+    coop_nom: req.body.coop_nom,
+    coop_adresse: req.body.coop_adresse,
+    coop_etat_parametre: req.body.coop_etat_parametre
+  }
+  modelCotisse.update_cooperative(id, cooperatives).then(response => {
+      res.json(response);
+    }, error => {
+      res.json(error);
+    });
+});
+
 module.exports = router
