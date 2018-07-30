@@ -58,7 +58,7 @@ class CoreModel {
 	/**
 	* sélectionner des lignes d'une table joignant une ou plusieurs autre(s) table(s)
 	* @param string table
-	* @param array join (ex: [["table1", "table1.champ = table2.champ", "inner"]] ou [["table1", "table1.champ = table2.champ"]] ou ["table1 on table1.champ = table2.champ"]) 
+	* @param array join (ex: [["table1", "table1.champ = table2.champ", "inner"]] ou [["table1", "table1.champ = table2.champ"]] ou ["table1 on table1.champ = table2.champ"])
 	* @param JSON data_condition (clé:valeur ex: {champ1: 12}) (champs de condition, peut être {})
 	* @param array data_champ (valeur, ... ex: ["champ1", "champ2"]) (champs à sélectionner, peut être [] )
 	* @return object (JSON)
@@ -92,7 +92,7 @@ class CoreModel {
 				var query = model.client.query(querystring);
 				var results = [];
 				model.client.query(querystring, (err, res) => {
-					console.log(err, res)
+					//console.log(err, res)
 					if(err == null) {
 						results = res.rows;
 						resolve({status:1, message: "Données récupérées", data: results});
@@ -152,7 +152,7 @@ class CoreModel {
 						var data_row = model.get_valmerged(data, "champ");
 						var data_val = model.get_valmerged(data, "valeur");
 						var querystring = "insert into "+table+"("+data_row+") values("+data_val+") returning *";
-						
+
 						model.client.query(querystring, (err, res) => {
 							//console.log( res)
 							if(err == null) {
