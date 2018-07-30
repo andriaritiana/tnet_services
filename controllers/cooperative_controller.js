@@ -10,4 +10,4 @@ router.get('/cooperative', function (req, res) {
   res.json(cooperatives);
 })
 
-module.exports = router
+module.exports = router;

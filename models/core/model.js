@@ -118,7 +118,7 @@ class CoreModel {
 			if(model.dberror) {
 				reject({status: -1, message: "Aucune base de données seléctionnée"});
 			} else {
-				if(data.length == 0) {
+				if(_.keys(data).length == 0) {
 					reject({status:0, message: "Aucune ligne à insérer"});
 				} else {
 					if(multiple) {
@@ -183,17 +183,17 @@ class CoreModel {
 			if(model.dberror) {
 				return {status: -1, message: "Aucune base de données seléctionnéé"};
 			} else {
-				if(data_condition.length == 0 || data_update.length == 0) {
+				if(_.keys(data_condition).length == 0 || _.keys(data_update).length == 0) {
 					return {status: 0, message: "Cette action n'est pas permise"};
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
 					var dataset = model.get_valmerged(data_update, "set");
 					var querystring = "update "+table+" set "+dataset+" where "+condition;
+					//console.log(querystring);
 					var query = model.client.query(querystring);
 					model.client.query(querystring, (err, res) => {
 						//console.log(err, res)
 						if(err == null) {
-							var id = res.rows[0].id;
 							resolve({status:1, message: "Mise à jour réussie"});
 						} else {
 							reject({status:0, message: "Echec de la mise à jour", error: err});
@@ -207,7 +207,7 @@ class CoreModel {
 
 	/**
 	* Supprimer des lignes d'une table
-	* @param string table (nom de la table)
+	* @param string table (nom de la table)s
 	* @param JSON data_condition (clé:valeur ex: {champ1: 12}) (champs de condition, ne peut pas être {})
 	* @return object (JSON)
 	*/
@@ -217,7 +217,7 @@ class CoreModel {
 			if(model.dberror) {
 				return {status: -1, message: "Aucune base de données seléctionnéé"};
 			} else {
-				if(data_condition.length == 0) {
+				if(_.keys(data_condition).length == 0) {
 					return {status: 0, message: "Cette action n'est pas permise"};
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
@@ -280,8 +280,8 @@ class CoreModel {
 			}
 		} else if(type == "condition") {
 			if(_.keys(data).length > 1) {
-				_.reduce(data_condition, function(cond, val, i) {
-					if((valeur+"").includes("' and")) {
+				return _.reduce(data, function(cond, val, i) {
+					if((cond+"").includes("' and")) {
 						return cond + " and "+i+" = '"+val+"'";
 					} else {
 						return _.keys(data)[0]+" = '"+cond+"' and "+i+" = '"+val+"'";
@@ -294,8 +294,8 @@ class CoreModel {
 			}
 		} else { //type == "set"
 			if(_.keys(data).length > 1) {
-				_.reduce(data_condition, function(cond, val, i) {
-					if((valeur+"").includes("', ")) {
+				return _.reduce(data, function(cond, val, i) {
+					if((cond+"").includes("', ")) {
 						return cond + ", "+i+" = '"+val+"'";
 					} else {
 						return _.keys(data)[0]+" = '"+cond+"', "+i+" = '"+val+"'";

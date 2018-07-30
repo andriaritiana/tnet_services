@@ -9,6 +9,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
 app.use(require("./middlewares/auth"));
 app.use(require("./controllers/cooperative_controller"));
+app.use(require("./controllers/guichet_controller"));
 
 app.listen(8060);
 
