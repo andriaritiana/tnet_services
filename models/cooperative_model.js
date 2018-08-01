@@ -15,9 +15,12 @@ class CooperativeModel extends Model {
     return this.insert(this.table, cooperatives, false);
   }
 
-  update_cooperative(id, cooperatives){
-    console.log(this.table, id, cooperatives);
-    return this.update(this.table, id, cooperatives);
+  update_cooperative(id, cooperative){
+    return this.update(this.table, id, cooperative);
+  }
+
+  delete_cooperative(id) {
+    return this.delete(this.table, id);
   }
 }
 module.exports = CooperativeModel;
