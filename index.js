@@ -15,5 +15,6 @@ controllers_files.forEach((controller) => {
   app.use(require("./controllers/" + controller));
 });
 
-app.listen(8060);
+const port = process.env.port || 8060;
+app.listen(8060, () => console.log(` Listening on port ${port} ...`));
 
