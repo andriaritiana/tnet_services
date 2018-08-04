@@ -1,0 +1,6 @@
+{
+  "name": "TransNet Mada - Production",
+  "mail": {
+    "host": "mail-server production"
+  }
+}

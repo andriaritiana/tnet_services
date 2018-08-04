@@ -2,6 +2,9 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const fs = require('fs');
+//To activate : in console (DEBUG=app:startup npm run start)
+//To desactivate : in console (DEBUG= npm run start)
+const debug = require('debug')('app:startup');
 
 
 app.set('view engine', 'ejs');
@@ -16,5 +19,5 @@ controllers_files.forEach((controller) => {
 });
 
 const port = process.env.port || 8060;
-app.listen(8060, () => console.log(` Listening on port ${port} ...`));
+app.listen(port, () => debug(` Listening on port ${port} ...`));
 
