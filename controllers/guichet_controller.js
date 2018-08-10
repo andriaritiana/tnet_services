@@ -3,7 +3,7 @@ var express = require('express')
 
 const guichetModel = require("../models/guichet_model");
 
-router.get('/guichet', async function (req, res) {
+router.get('/guichets', async function (req, res) {
 	guichet = new guichetModel("cotisse");
   	guichets = await guichet.get_all_guichets();
   	//console.log(guichets);

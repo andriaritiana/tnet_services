@@ -222,7 +222,6 @@ class CoreModel {
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
 					var querystring = "delete from "+table+" where "+condition;
-					var query = this.client.query(querystring);
 					model.client.query(querystring, (err, res) => {
 						//console.log(err, res)
 						if(err == null) {
