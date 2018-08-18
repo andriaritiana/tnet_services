@@ -1,93 +1,93 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
+const debug = require("debug")("app:startup");
 
 const coopModel = require("../models/cooperative_model");
 modelCotisse = new coopModel("cotisse");
 
 router.get('/cooperative',  (req, res) => {
-  const cooperatives = modelCotisse.get_all_cooperatives();
-  cooperatives.then( (response) => {
-    res.json(response);
-    }, (error) => {
-      res.json(error);
-    });
+  modelCotisse.get_all_cooperatives()
+  .then( (response) => { res.json(response)})
+  .catch(error => { res.json(error)})
 })
 
 router.get('/cooperative/:id', (req, res) => {
-  let cooperative = { coop_id: parseInt(req.params.id)};
-  modelCotisse.get_cooperative(cooperative).then(response => {
-      res.json(response);
-    }, error => {
-      res.status(404).json("Identifiant de coppérative non trouvé");
-    });
+  coopId = req.params.id;
+  modelCotisse.get_cooperative({ coop_id: coopId })
+    .then(response => {  res.json(response)})
+    .catch(error => { res.status(404).json("Identifiant de coppérative non trouvé", error)});
 });
 
 router.post("/cooperative/add", (req, res) => {
-  const { error } = cooperative_validation(req.body);
+  const { error } = cooperative_add_validation(req.body);
   if(error) return res.status(400).send(error.details[0].message);
-
+  else{
     const cooperative = {
       coop_nom: req.body.coop_nom,
       coop_adresse: req.body.coop_adresse,
       coop_etat_parametre: req.body.coop_etat_parametre
     }
-    modelCotisse.add_cooperative(cooperative).then(response => {
-        res.json(response);
-      }, error => {
-        res.json(error);
-      });
+    modelCotisse.add_cooperative(cooperative)
+    .then(response => { res.json(response)})
+    .catch(error => { res.json(error)});
+  }
 
 });
 
-router.put("/cooperative/update/:id", (req, res) => {
-  let cooperative = { coop_id: parseInt(req.params.id) };
-  modelCotisse.get_cooperative(cooperative).then(response => {
+router.post("/cooperative/update", (req, res) => {
+  const { error } = cooperative_update_validation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  else {
+    const cooperative_update = {
+      coop_nom: req.body.coop_nom,
+      coop_adresse: req.body.coop_adresse,
+      coop_etat_parametre: req.body.coop_etat_parametre
+    }
 
-      const { error } = cooperative_validation(req.body);
-      if (error) return res.status(400).send(error.details[0].message);
-
-      const cooperative_update = {
-        coop_nom: req.body.coop_nom,
-        coop_adresse: req.body.coop_adresse,
-        coop_etat_parametre: req.body.coop_etat_parametre
-      }
-
-      modelCotisse.update_cooperative(cooperative, cooperative_update).then(response => {
-          res.json(response);
-        }, (error) => {
-          res.json(error);
-        });
-
-    }, error => {
-      res.status(404).json("Identifiant de coppérative non trouvé");
-    });
-
-
+    modelCotisse.update_cooperative(cooperative, cooperative_update)
+      .then(response => { res.json(response) })
+      .catch(error => { res.json(error) })
+  }
 });
 
-router.delete("/cooperative/delete/:id",  (req, res) => {
-  let cooperative = { coop_id: parseInt(req.params.id) };
-  modelCotisse.get_cooperative(cooperative).then(response => {
-    modelCotisse.delete_cooperative(cooperative).then(response => {
-        res.json(response);
-      }, (error) => {
-        res.json(error);
-      });
-
-    }, error => {
-      res.status(404).json("Identifiant de coppérative non trouvé");
-    });
-
+router.post("/cooperative/delete",  (req, res) => {
+  const { error } = cooperative_delete_validation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  else {
+    const cooperative = {
+      coop_id: req.body.coop_id
+    }
+  modelCotisse.delete_cooperative(cooperative)
+    .then(response => { res.json(response) })
+    .catch(error => { res.json(error) })
+  }
 });
 
-function cooperative_validation(cooperative){
-  const schema = {
+function cooperative_add_validation(cooperative){
+  const cooperative_schema = {
     coop_nom: Joi.string().min(3).required(),
     coop_adresse: Joi.string(),
     coop_etat_parametre: Joi.number()
   };
-  return Joi.validate(cooperative, schema);
+  return Joi.validate(cooperative, cooperative_schema);
+}
+
+function cooperative_update_validation(cooperative){
+  const cooperative_schema = {
+    coop_id:Joi.required(),
+    coop_nom: Joi.string().min(3).required(),
+    coop_adresse: Joi.string(),
+    coop_etat_parametre: Joi.number()
+  };
+  return Joi.validate(cooperative, cooperative_schema);
+}
+
+function cooperative_delete_validation(cooperative) {
+  const cooperative_schema = {
+    coop_id: Joi.required()
+  };
+  return Joi.validate(cooperative, cooperative_schema);
 }
 
 module.exports = router;

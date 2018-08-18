@@ -18,6 +18,9 @@ controllers_files.forEach((controller) => {
   app.use(require("./controllers/" + controller));
 });
 
+console.log(`NODE ENV ${process.env.NODE_ENV}`);
+console.log(`APP ENV  ${app.get("env")}`);
+
 const port = process.env.port || 8060;
 app.listen(port, () => debug(` Listening on port ${port} ...`));
 
