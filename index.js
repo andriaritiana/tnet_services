@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 //To activate : in console (DEBUG=app:startup npm run start)
 //To desactivate : in console (DEBUG= npm run start)
-const debug = require('debug')('app:startup');
-
+global.debug = require('debug')('app:startup');
+global.message = require("./shared/messages_fr");
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
