@@ -1,5 +1,6 @@
 const _ = require('underscore');
 const { Client } = require('pg')
+const debug = require('debug')('app:startup');
 
 /**
 * @Author Andri
@@ -39,7 +40,7 @@ class CoreModel {
 				var condition = model.get_valmerged(data_condition, "condition");
 				var champs = model.get_valmerged(data_champ, "champ");
 				var querystring = " select "+champs+" from "+table+" where "+condition;
-				console.log(querystring);
+				debug(querystring);
 				var query = model.client.query(querystring);
 				var results = [];
 				model.client.query(querystring, (err, res) => {
@@ -181,25 +182,30 @@ class CoreModel {
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				return {status: -1, message: "Aucune base de données seléctionnéé"};
+				reject({status: -1, message: "Aucune base de données seléctionnéé"});
 			} else {
 				if(_.keys(data_condition).length == 0 || _.keys(data_update).length == 0) {
-					return {status: 0, message: "Cette action n'est pas permise"};
+					reject({status: 0, message: "Cette action n'est pas permise"});
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
 					var dataset = model.get_valmerged(data_update, "set");
 					var querystring = "update "+table+" set "+dataset+" where "+condition;
 					//console.log(querystring);
 					var query = model.client.query(querystring);
-					model.client.query(querystring, (err, res) => {
-						//console.log(err, res)
-						if(err == null) {
-							resolve({status:1, message: "Mise à jour réussie"});
-						} else {
-							reject({status:0, message: "Echec de la mise à jour", error: err});
-						}
-						model.client.end();
-					});
+					try {
+						model.client.query(querystring, (err, res) => {
+							//console.log(err, res)
+							if(err == null) {
+								resolve({status:1, message: "Mise à jour réussie"});
+							} else {
+								reject({status:0, message: "Echec de la mise à jour", error: err});
+							}
+							model.client.end();
+						});
+					} catch(e) {
+						debug(e);
+						reject({status: -2, message: "Erreur lors de l'execution de la requete"});
+					}
 				}
 			}
 		});
@@ -281,13 +287,13 @@ class CoreModel {
 			if(_.keys(data).length > 1) {
 				return _.reduce(data, function(cond, val, i) {
 					if((cond+"").includes("' and")) {
-						return cond + " and "+i+" = '"+val+"'";
+						return cond + " and "+i+(val.split(' ')[1] == undefined ? " = '"+val : " "+val.split(' ')[0]+" '"+val.split(' ')[1])+"'";
 					} else {
-						return _.keys(data)[0]+" = '"+cond+"' and "+i+" = '"+val+"'";
+						return _.keys(data)[0]+(cond.split(' ')[1] == undefined ? " = '"+cond : " "+cond.split(' ')[0]+" '"+cond.split(' ')[1])+"' and "+i+(val.split(' ')[1] == undefined ? " = '"+val : " "+val.split(' ')[0]+" '"+val.split(' ')[1])+"'";
 					}
 				});
 			} else if(_.keys(data).length == 1) {
-				return _.keys(data)[0]+" = '"+data[_.keys(data)[0]]+"'";
+				return _.keys(data)[0]+(data[_.keys(data)[0]].split(' ')[1] == undefined ? " = '"+data[_.keys(data)[0]] : " "+data[_.keys(data)[0]].split(' ')[0]+" '"+data[_.keys(data)[0]].split(' ')[1])+"'";
 			} else { //vide
 				return "true";
 			}

@@ -1,24 +1,15 @@
-let express = require('express');
-let app = express();
-let bodyParser = require('body-parser');
-let fs = require('fs');
-const https = require('https');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+//To activate : in console (DEBUG=app:startup npm run start)
+//To desactivate : in console (DEBUG= npm run start)
+global.debug = require('debug')('app:startup');
+const controllers_files = fs.readdirSync('./controllers');
+controllers_files.forEach((controller) => {
+  app.use(require("./controllers/" + controller));
+});
 
-var options = {
-  key: fs.readFileSync('./ssl/server.key'),
-  cert: fs.readFileSync('./ssl/server.crt'),
-  //ca: fs.readFileSync('certificates/ca_bundle.crt')
-};
-
-
-app.set('view engine', 'ejs');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + "/public"));
-app.use(require("./middlewares/auth"));
-app.use(require("./controllers/cooperative_controller"));
-app.use(require("./controllers/guichet_controller"));
-
-app.listen(8060);
-https.createServer(options, app).listen(443);
+const port = process.env.port || 8060;
+app.listen(port, () => debug(` Listening on port ${port} ...`));
 

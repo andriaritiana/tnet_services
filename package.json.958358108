@@ -22,8 +22,6 @@
   "homepage": "https://github.com/andriaritiana/tnet_services#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "config": "^2.0.1",
-    "debug": "^3.1.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
     "express-generator": "^4.13.4",

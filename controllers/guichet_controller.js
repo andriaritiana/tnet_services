@@ -4,13 +4,20 @@ var express = require('express')
 const guichetModel = require("../models/guichet_model");
 
 router.get('/guichets', async function (req, res) {
-	guichet = new guichetModel("cotisse");
-  	guichets = await guichet.get_all_guichets();
+	var sous_domaine = req.headers.host.split('.')[0];
+	debug(sous_domaine);
+	guichet = new guichetModel(sous_domaine);
+	try {
+		guichets = await guichet.get_all_guichets();
+  		res.json(guichets);
+	} catch (e) {
+		res.status(500).json({status: 0, message: "Erreur de traitement survenue"});
+	}
+  	
   	//console.log(guichets);
-  	res.json(guichets);
 });
 
-router.post('/guichet/:action', async function (req, res) {
+router.post('/guichet/:action/:param', async function (req, res) {
 	guichet = new guichetModel("cotisse");
 	var result = null;
   	if(req.params.action == "add" || req.params.action == "ajouter") {
