@@ -19,11 +19,19 @@ class CooperativeModel extends Model {
   }
 
   update_cooperative(cooperative, cooperative_update) {
-    return this.update(this.table, cooperative, cooperative_update);
+    return this.update(this.table, { coop_id: cooperative_update.coop_id}, cooperative_update);
   }
 
   delete_cooperative(cooperative) {
     return this.delete(this.table, cooperative);
+  }
+
+  control_duplicate(cooperative) {
+    return this.select(this.table, cooperative, {});
+  }
+
+  control_duplicate_update(cooperative_update) {
+    return this.select(this.table, cooperative_update, {});
   }
 }
 module.exports = CooperativeModel;

@@ -18,7 +18,9 @@ router.get('/guichets', async function (req, res) {
 });
 
 router.post('/guichet/:action/:param', async function (req, res) {
-	guichet = new guichetModel("cotisse");
+	var sous_domaine = req.headers.host.split('.')[0];
+	debug(sous_domaine);
+	guichet = new guichetModel(sous_domaine);
 	var result = null;
   	if(req.params.action == "add" || req.params.action == "ajouter") {
   		var nom = req.body.nom;
