@@ -284,18 +284,39 @@ class CoreModel {
 				return "'"+data[_.keys(data)[0]]+"'";
 			}
 		} else if(type == "condition") {
-			if(_.keys(data).length > 1) {
+			if(_.isObject(data)) {
+				if(_.keys(data).length > 1) {
+					return _.reduce(data, function(cond, val, i) {
+						if((cond+"").includes("' and")) {
+							return cond + " and "+i+(val == null  || val.toLowerCase() == "null" ? " is null" 
+									: val.toLowerCase() == "is not null" ? " "+val 
+									: val.split(' ')[1] == undefined ? " = '"+val+"'"
+									: " "+val.split(' ')[0]+" '"+val.split(' ')[1]+"'");
+						} else {
+							return _.keys(data)[0]+(cond == null || cond.toLowerCase() == "null" ? " is null" 
+									: cond.toLowerCase() == "is not null" ? " "+cond
+									: cond.split(' ')[1] == undefined ? " = '"+cond+"'" 
+									: " "+cond.split(' ')[0]+" '"+cond.split(' ')[1]+"'")+" and "+i+
+									(val == null  || val.toLowerCase() == "null" ? " is null" 
+									: val.toLowerCase() == "is not null" ? " "+val
+									: val.split(' ')[1] == undefined ? " = '"+val+"'" 
+									: " "+val.split(' ')[0]+" '"+val.split(' ')[1]+"'");
+						}
+					});
+				} else if(_.keys(data).length == 1) {
+					return _.keys(data)[0]+(data[_.keys(data)[0]] == null  || data[_.keys(data)[0]].toLowerCase() == "null" ? " is null" 
+									: data[_.keys(data)[0]].toLowerCase() == "is not null" ? " is not null" 
+									: data[_.keys(data)[0]].split(' ')[1] == undefined ? " = '"+data[_.keys(data)[0]]+"'"
+									: " "+data[_.keys(data)[0]].split(' ')[0]+" '"+data[_.keys(data)[0]].split(' ')[1]+"'");
+				} else { //vide
+					return "true";
+				}
+			} else if(_.isArray(data)) {
 				return _.reduce(data, function(cond, val, i) {
-					if((cond+"").includes("' and")) {
-						return cond + " and "+i+(val.split(' ')[1] == undefined ? " = '"+val : " "+val.split(' ')[0]+" '"+val.split(' ')[1])+"'";
-					} else {
-						return _.keys(data)[0]+(cond.split(' ')[1] == undefined ? " = '"+cond : " "+cond.split(' ')[0]+" '"+cond.split(' ')[1])+"' and "+i+(val.split(' ')[1] == undefined ? " = '"+val : " "+val.split(' ')[0]+" '"+val.split(' ')[1])+"'";
-					}
+					return cond+" and "+val;
 				});
-			} else if(_.keys(data).length == 1) {
-				return _.keys(data)[0]+(data[_.keys(data)[0]].split(' ')[1] == undefined ? " = '"+data[_.keys(data)[0]] : " "+data[_.keys(data)[0]].split(' ')[0]+" '"+data[_.keys(data)[0]].split(' ')[1])+"'";
-			} else { //vide
-				return "true";
+			} else {
+				return data == undefined || data == null || data == "" ? "true" : data;
 			}
 		} else { //type == "set"
 			if(_.keys(data).length > 1) {
