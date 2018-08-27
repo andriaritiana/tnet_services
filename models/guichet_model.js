@@ -7,7 +7,7 @@ class GuichetModel extends Model {
   }
 
   async get_all_guichets() {
-  	return await this.select("guichet", {guichet_id: "<= 5", guichet_nom: "like %Tana%"}, []);
+  	return await this.select("guichet", {guichet_id: "<= 5", guichet_nom: "is not NULL"}, []);
   }
 
   get_all_guichetiers() {
