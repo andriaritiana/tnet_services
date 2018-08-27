@@ -18,7 +18,7 @@ class CooperativeModel extends Model {
     return this.insert(this.table, cooperatives, false);
   }
 
-  update_cooperative(cooperative, cooperative_update) {
+  update_cooperative(cooperative_update) {
     return this.update(this.table, { coop_id: cooperative_update.coop_id}, cooperative_update);
   }
 
@@ -31,7 +31,7 @@ class CooperativeModel extends Model {
   }
 
   control_duplicate_update(cooperative_update) {
-    return this.select(this.table, cooperative_update, {});
+    return this.select(this.table, cooperative_update, { coop_id:cooperative_update.coop_id});
   }
 }
 module.exports = CooperativeModel;
