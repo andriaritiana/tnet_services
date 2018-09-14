@@ -63,6 +63,7 @@ router.post("/cooperative/add", (req, res) => {
 });
 
 router.post("/cooperative/update", (req, res) => {
+  throw new InputValidationError("Validation error…");
   const { error } = cooperative_update_validation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   else {

@@ -6,6 +6,7 @@ const fs = require('fs');
 //To desactivate : in console (DEBUG= npm run start)
 global.debug = require('debug')('app:startup');
 global.message = require("./shared/messages_fr");
+global.error = require("./shared/error");
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
