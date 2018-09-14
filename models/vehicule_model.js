@@ -1,35 +1,37 @@
 const Model = require('./core/model');
 
 class VehiculeModel extends Model {
-
   constructor(subdomain) {
     super(subdomain);
+    this.table = "vehicule";
+  }
+
+  get_vehicule(vehicule) {
+    return this.select(this.table, vehicule, {});
   }
 
   get_all_vehicules() {
-  	return this.select("vehicule", {}, []);
+    return this.select(this.table, {}, {});
   }
 
-  get_all_categories() {
-  	return this.select("cat_vehicule", {}, []);
+  add_vehicule(vehicules) {
+    return this.insert(this.table, vehicules, false);
   }
 
-  get_all_types() {
-  	return this.select("type_vehicule", {}, []);
+  update_vehicule(vehicule_update) {
+    return this.update(this.table, { vehic_id: vehicule_update.vehic_id}, vehicule_update);
   }
 
-  add_data(table, data) {
-  	return this.insert(table, data, false);
+  delete_vehicule(vehicule) {
+    return this.delete(this.table, vehicule);
   }
 
-  update_data(table, info, condition) {
-  	return this.update(table, condition, info);
+  control_duplicate(vehicule) {
+    return this.select(this.table, vehicule, {});
   }
 
-  delete_data(table, condition) {
-  	return this.delete(table, condition);
+  control_duplicate_update(vehicule_update) {
+    return this.select(this.table, vehicule_update, { vehic_id:vehicule_update.vehic_id});
   }
-
 }
-
 module.exports = VehiculeModel;
