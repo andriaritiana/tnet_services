@@ -1,11 +1,10 @@
 const { Client } = require('pg');
+const config = require('../../config/db_config');
 
 /**
 * @Author Andri
 * Modèle mère
 */
-const config = require('../../config/db_config');
-
 class CoreModel {
 
 	/**
