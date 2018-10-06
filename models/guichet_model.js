@@ -7,7 +7,9 @@ class GuichetModel extends Model {
   }
 
   async get_all_guichets() {
-  	return await this.select("guichet", {guichet_id: "<= 5", guichet_nom: "is not NULL"}, []);
+  	//Exemple d'utilisation de condition en commentaire
+  	//return await this.select("guichet", {guichet_id: "<= 5", guichet_nom: "is not NULL"}, []);
+  	return await this.select("guichet", {}, []);
   }
 
   get_all_guichetiers() {

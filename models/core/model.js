@@ -1,6 +1,4 @@
-const _ = require('underscore');
-const { Client } = require('pg')
-const debug = require('debug')('app:startup');
+const { Client } = require('pg');
 
 /**
 * @Author Andri
@@ -13,16 +11,21 @@ class CoreModel {
 	*/
 	constructor(subdomain) {
 		const config = require('../../config/db_config');
-		const dbliste = require('../../config/db_list');
-		if(dbliste[subdomain] == undefined) {
+		this.dbliste = require('../../config/db_list');
+		this.loadDatabase(subdomain);
+	}
+
+	loadDatabase(subdomain) {
+		if(this.dbliste[subdomain] == undefined) {
 			this.dberror = true;
 		} else {
 			this.dberror = false;
-			config.database = dbliste[subdomain];
+			config.database = this.dbliste[subdomain];
 			this.client = new Client(config);
 			this.client.connect();
 		}
 	}
+
 
 	/**
 	* Sélectionner des lignes d'une table
@@ -31,24 +34,31 @@ class CoreModel {
 	* @param array data_champ (valeur,... ex: ["champ1","champ2"]) (champs à sélectionner, peut être [] )
 	* @return object (JSON)
 	*/
-	select(table, data_condition, data_champ) {
+	select(table, data_condition, data_champ, nostatus, limit, offset) {
+		var nostatus = (typeof nostatus !== 'undefined') ? nostatus : false;
+		var limit = (typeof limit !== 'undefined') ? limit : 0;
+		var offset = (typeof offset !== 'undefined') ? offset : 0;
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				reject({status: -1, message: "Aucune base de données seléctionnée"});
+				reject(nostatus ? false : error.DatabaseError("Aucune base de données seléctionnée"));
 			} else {
 				var condition = model.get_valmerged(data_condition, "condition");
 				var champs = model.get_valmerged(data_champ, "champ");
 				var querystring = " select "+champs+" from "+table+" where "+condition;
+				if(limit > 0) {
+					querystring += " limit = "+limit;
+				}
+				if(offset > 0) {
+					querystring += " offset = "+offset;
+				}
 				debug(querystring);
-				var query = model.client.query(querystring);
-				var results = [];
 				model.client.query(querystring, (err, res) => {
 					if(err == null) {
 						results = res.rows;
-						resolve({status:1, message: "Données récupérées", data: results});
+						resolve(nostatus ? results : {status:1, message: "Données récupérées", data: results});
 					} else {
-						reject({status:0, message: "Erreur de récupération des données", error: err});
+						reject(nostatus ? false : new error.DatabaseError("Erreur de récupération des données"));
 					}
 					model.client.end();
 				});
@@ -64,11 +74,14 @@ class CoreModel {
 	* @param array data_champ (valeur, ... ex: ["champ1", "champ2"]) (champs à sélectionner, peut être [] )
 	* @return object (JSON)
 	*/
-	select_join(table, join, data_condition, data_champ) {
+	select_join(table, join, data_condition, data_champ, nostatus, limit, offset) {
+		var nostatus = (typeof nostatus !== 'undefined') ? nostatus : false;
+		var limit = (typeof limit !== 'undefined') ? limit : 0;
+		var offset = (typeof offset !== 'undefined') ? offset : 0;
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				reject({status: -1, message: "Aucune base de données seléctionnée"});
+				reject(nostatus ? false : error.DatabaseError("Aucune base de données seléctionnée"));
 			} else {
 				var condition = model.get_valmerged(data_condition, "condition");
 				var champs = model.get_valmerged(data_champ, "champ");
@@ -90,15 +103,19 @@ class CoreModel {
 					});
 					querystring = " select "+champs+" from "+table+" "+jointure+" where "+condition;
 				}
-				var query = model.client.query(querystring);
-				var results = [];
+				if(limit > 0) {
+					querystring += " limit = "+limit;
+				}
+				if(offset > 0) {
+					querystring += " offset = "+offset;
+				}
 				model.client.query(querystring, (err, res) => {
 					//console.log(err, res)
 					if(err == null) {
 						results = res.rows;
-						resolve({status:1, message: "Données récupérées", data: results});
+						resolve(nostatus ? results : {status:1, message: "Données récupérées", data: results});
 					} else {
-						reject({status:0, message: "Erreur de récupération des données", error: err});
+						reject(nostatus ? false : new error.DatabaseError("Erreur de récupération des données"));
 					}
 					model.client.end();
 				});
@@ -113,11 +130,13 @@ class CoreModel {
 	* @param boolean multiple (si l'insértion est de type multiple ou une seule ligne)
 	* @return object (JSON)
 	*/
-	insert(table, data, multiple) {
+	insert(table, data, multiple, nostatus) {
+		var nostatus = (typeof nostatus !== 'undefined') ? nostatus : false;
+		var multiple = (typeof multiple !== 'undefined') ? multiple : false;
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				reject({status: -1, message: "Aucune base de données seléctionnée"});
+				reject(error.DatabaseError("Aucune base de données seléctionnée"));
 			} else {
 				if(_.keys(data).length == 0) {
 					reject({status:0, message: "Aucune ligne à insérer"});
@@ -145,7 +164,7 @@ class CoreModel {
 								var id = res.rows[0][key0];
 								resolve({status:1, message: "Données insérées", id: id});
 							} else {
-								reject({status:0, message: "Echec de l'insertion des données", error: err});
+								reject(error.DatabaseError("Echec de l'insertion des données"+err));
 							}
 							model.client.end();
 						});
@@ -159,9 +178,9 @@ class CoreModel {
 							if(err == null) {
 								var key0 = _.keys(res.rows[0])[0];
 								var id = res.rows[0][key0];
-								resolve({status:1, message: "Données insérées", id: id});
+								resolve(nostatus ? id : {status:1, message: "Données insérées", id: id});
 							} else {
-								reject({status:0, message: "Echec de l'insertion des données", error: err});
+								reject(nostatus ? false : error.DatabaseError("Echec de l'insertion des données"+ err));
 							}
 							model.client.end();
 						});
@@ -182,30 +201,24 @@ class CoreModel {
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				reject({status: -1, message: "Aucune base de données seléctionnéé"});
+				reject(error.DatabaseError("Aucune base de données seléctionnée"));
 			} else {
 				if(_.keys(data_condition).length == 0 || _.keys(data_update).length == 0) {
-					reject({status: 0, message: "Cette action n'est pas permise"});
+					reject(error.DatabaseError("Cette action n'est pas permise"));
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
 					var dataset = model.get_valmerged(data_update, "set");
 					var querystring = "update "+table+" set "+dataset+" where "+condition;
 					//console.log(querystring);
-					var query = model.client.query(querystring);
-					try {
-						model.client.query(querystring, (err, res) => {
-							//console.log(err, res)
-							if(err == null) {
-								resolve({status:1, message: "Mise à jour réussie"});
-							} else {
-								reject({status:0, message: "Echec de la mise à jour", error: err});
-							}
-							model.client.end();
-						});
-					} catch(e) {
-						debug(e);
-						reject({status: -2, message: "Erreur lors de l'execution de la requete"});
-					}
+					model.client.query(querystring, (err, res) => {
+						//console.log(err, res)
+						if(err == null) {
+							resolve({status:1, message: "Mise à jour réussie"});
+						} else {
+							reject(error.DatabaseError("Echec de la mise à jour"+err));
+						}
+						model.client.end();
+					});
 				}
 			}
 		});
@@ -221,10 +234,10 @@ class CoreModel {
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
-				return {status: -1, message: "Aucune base de données seléctionnéé"};
+				reject(error.DatabaseError("Aucune base de données seléctionnée"));
 			} else {
 				if(_.keys(data_condition).length == 0) {
-					return {status: 0, message: "Cette action n'est pas permise"};
+					retject(error.DatabaseError("Cette action n'est pas permise"));
 				} else {
 					var condition = model.get_valmerged(data_condition, "condition");
 					var querystring = "delete from "+table+" where "+condition;
@@ -232,9 +245,9 @@ class CoreModel {
 						//console.log(err, res)
 						if(err == null) {
 							var id = res.rows[0].id;
-							reject({status:1, message: "Mise à jour réussie"});
+							resolve({status:1, message: "Suppression réussie"});
 						} else {
-							resolve({status:0, message: "Echec de la mise à jour", error: err});
+							reject(error.DatabaseError("Echec de la suppression : "+err));
 						}
 						model.client.end();
 					});
@@ -256,7 +269,7 @@ class CoreModel {
 				} else {
 					return "*";
 				}
-			} else {
+			} else if(_.isObject(data)) {
 				if(_.keys(data).length > 1) {
 					return _.reduce(data, function(champ, val, i) {
 						if(champ.includes(', ')) {
@@ -270,6 +283,8 @@ class CoreModel {
 				} else { //vide
 					return "*";
 				}
+			} else {//string
+				return data;
 			}
 		} else if(type == "valeur") {
 			if(_.keys(data).length > 1) {
@@ -333,4 +348,5 @@ class CoreModel {
 		}
 	}
 }
+
 module.exports = CoreModel;
