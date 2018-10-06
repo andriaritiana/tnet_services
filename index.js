@@ -7,6 +7,7 @@ const fs = require('fs');
 global.debug = require('debug')('app:startup');
 global.message = require("./shared/messages_fr");
 global.error = require("./shared/error");
+global.cooperative_name = "cotisse";
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());

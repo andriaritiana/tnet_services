@@ -1,10 +1,12 @@
 const Model = require('./core/model');
 
 class CooperativeModel extends Model {
+
   constructor(subdomain) {
     super(subdomain);
     this.table = "cooperative";
   }
+
 
   get_cooperative(cooperative) {
     return this.select(this.table, cooperative, {});
