@@ -4,13 +4,14 @@ const { Client } = require('pg');
 * @Author Andri
 * Modèle mère
 */
+const config = require('../../config/db_config');
+
 class CoreModel {
 
 	/**
 	* Le constructeur doit toujours recevoir le nom du sous-domaine en paramètre
 	*/
 	constructor(subdomain) {
-		const config = require('../../config/db_config');
 		this.dbliste = require('../../config/db_list');
 		this.loadDatabase(subdomain);
 	}
@@ -55,7 +56,7 @@ class CoreModel {
 				debug(querystring);
 				model.client.query(querystring, (err, res) => {
 					if(err == null) {
-						results = res.rows;
+						let results = res.rows;
 						resolve(nostatus ? results : {status:1, message: "Données récupérées", data: results});
 					} else {
 						reject(nostatus ? false : new error.DatabaseError("Erreur de récupération des données"));
@@ -112,7 +113,7 @@ class CoreModel {
 				model.client.query(querystring, (err, res) => {
 					//console.log(err, res)
 					if(err == null) {
-						results = res.rows;
+						let results = res.rows;
 						resolve(nostatus ? results : {status:1, message: "Données récupérées", data: results});
 					} else {
 						reject(nostatus ? false : new error.DatabaseError("Erreur de récupération des données"));
