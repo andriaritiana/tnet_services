@@ -2,38 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 
-const coopModel = require("../models/cooperative_model");
-modelCotisse = new coopModel("cotisse");
+const CooperativeModel = require("../models/cooperative_model");
+const model = new CooperativeModel(cooperative_name);
 
 router.get('/cooperative',  (req, res) => {
-  const cooperatives = modelCotisse.get_all_cooperatives();
-  cooperatives.then( (response) => {
-    res.json(response);
-    }, (error) => {
-      res.json(error);
-    });
-})
-
-router.get('/cooperative/:id', (req, res) => {
-  let cooperative = { coop_id: parseInt(req.params.id)};
-  modelCotisse.get_cooperative(cooperative).then(response => {
-      res.json(response);
-    }, error => {
-      res.status(404).json("Identifiant de coppérative non trouvé");
-    });
+  model.get_all_cooperatives()
+  .then(response => { res.json(response); })
+  .catch(error => { res.json(error);})
 });
 
-router.post("/cooperative/add", (req, res) => {
-  const { error } = cooperative_validation(req.body);
-  if(error) return res.status(400).send(error.details[0].message);
-  modelCotisse.get_all_cooperatives()
-  .then( (response) => { res.json(response)})
-  .catch(error => { res.json(error)})
-})
-
 router.get('/cooperative/:id', (req, res) => {
-  coopId = req.params.id;
-  modelCotisse.get_cooperative({ coop_id: coopId })
+  let coopId = req.params.id;
+  model.get_cooperative({ coop_id: coopId })
     .then(response => {  res.json(response)})
     .catch(error => { res
                         .status(404)
@@ -49,12 +29,12 @@ router.post("/cooperative/add", (req, res) => {
       coop_adresse: req.body.coop_adresse,
       coop_etat_parametre: req.body.coop_etat_parametre
     }
-    modelCotisse.control_duplicate(cooperative)
+    model.control_duplicate(cooperative)
     .then(response => {
       if(response.data){
         res.json(message.duplicate_value);
       }else{
-        modelCotisse.add_cooperative(cooperative)
+        model.add_cooperative(cooperative)
         .then(response => { res.json(response)})
         .catch(error => { res.json(error)});
       }})
@@ -63,7 +43,7 @@ router.post("/cooperative/add", (req, res) => {
 });
 
 router.post("/cooperative/update", (req, res) => {
-  throw new InputValidationError("Validation error…");
+  /* throw new InputValidationError("Validation error…"); */
   const { error } = cooperative_update_validation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   else {
@@ -73,13 +53,13 @@ router.post("/cooperative/update", (req, res) => {
       coop_adresse: req.body.coop_adresse,
       coop_etat_parametre: req.body.coop_etat_parametre
     }
-    modelCotisse
+    model
       .control_duplicate_update(cooperative_update)
       .then(response => {
         if (response.data) {
           res.json(message.duplicate_value);
         } else {
-          modelCotisse
+          model
             .update_cooperative(cooperative_update)
             .then(response => {
               res.json(response);
@@ -89,17 +69,6 @@ router.post("/cooperative/update", (req, res) => {
             });
         }
       })
-/*     modelCotisse
-      .update_cooperative(cooperative_update)
-      .then(response => {
-        res.json(response);
-      })
-      .catch(error => {
-        res.json(error);
-      })
-      .catch(error => {
-        res.json(error);
-      }); */
   }
 });
 
@@ -110,7 +79,7 @@ router.post("/cooperative/delete",  (req, res) => {
     const cooperative = {
       coop_id: req.body.coop_id
     }
-  modelCotisse.delete_cooperative(cooperative)
+  model.delete_cooperative(cooperative)
     .then(response => { res.json(response) })
     .catch(error => { res.json(error) })
   }

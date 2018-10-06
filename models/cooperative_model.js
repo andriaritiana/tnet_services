@@ -2,10 +2,12 @@ const Model = require('./core/model');
 const nodeEnv = process.env.NODE_ENV;
 
 class CooperativeModel extends Model {
+
   constructor(subdomain) {
     super(subdomain);
     this.table = "cooperative";
   }
+
 
   get_cooperative(cooperative) {
     return this.select(this.table, cooperative, {}, false, 0, 0, nodeEnv == "test" ? false : true);

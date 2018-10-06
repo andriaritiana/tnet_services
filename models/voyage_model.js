@@ -19,7 +19,7 @@ class VoyageModel extends Model {
   }
 
   update_voyage(voyage_update) {
-    return this.update(this.table, { voyage_id: voyage_update.voyage_id}, voyage_update);
+    return this.update(this.table, { voy_id: voyage_update.voy_id}, voyage_update);
   }
 
   delete_voyage(voyage) {
@@ -31,7 +31,7 @@ class VoyageModel extends Model {
   }
 
   control_duplicate_update(voyage_update) {
-    return this.select(this.table, voyage_update, { voyage_id:voyage_update.voyage_id});
+    return this.select(this.table, voyage_update, { voy_id:voyage_update.voy_id});
   }
 }
 module.exports = VoyageModel;
