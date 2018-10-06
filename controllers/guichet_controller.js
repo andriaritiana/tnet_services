@@ -11,10 +11,9 @@ router.get('/guichets', async function (req, res) {
 		guichets = await guichet.get_all_guichets();
   		res.json(guichets);
 	} catch (e) {
+		debug(e);
 		res.status(500).json({status: 0, message: "Erreur de traitement survenue"});
 	}
-  	
-  	//console.log(guichets);
 });
 
 router.post('/guichet/:action/:param', async function (req, res) {
