@@ -10,6 +10,8 @@ global.utilities = require("./shared/utilities");
 global.error = require("./shared/errors");
 global._ = require('underscore');
 
+debug(utilities);
+debug(utilities.getRndInteger(15, 59));
 app.set('view engine', 'ejs');
 app.use(function (req, res, next) {
 
