@@ -1,5 +1,16 @@
 const Model = require('./core/model');
 
+/* config_db = {
+  user: 'postgres',
+      host: 'localhost',
+          database: 'db_coop_cotisse',
+              password: 'root',
+                  port: '5432'
+}
+
+const pg = require('pg');
+const pool = new pg.Pool(config_db); */
+
 class VilleModel extends Model {
   constructor(subdomain) {
     super(subdomain);
@@ -12,6 +23,17 @@ class VilleModel extends Model {
 
   get_all_villes() {
     return this.select(this.table, {}, {});
+/*       return new Promise(function (resolve, reject) {
+          pool.query('SELECT * FROM ville', (err, res) => {
+              if (!err) {
+                    console.log("RESULT");
+                  resolve(res.rows);
+              } else {
+                console.log("ERREOR");
+                  reject(err);
+              }
+          });
+      }); */
   }
 
   add_ville(villes) {
