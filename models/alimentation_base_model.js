@@ -5,11 +5,34 @@ const tables = require('./core/db_tables');
  * Variables global utilisés pour générer les données 
  * Outre la liste des coopératives, les données sont utilisés de manière aléatoire
  */
-let cooperatives = ["vatsy", "kofimanga", "kofiam"];
+let cooperatives = ["cotisse", "vatsy", "kofimanga", "kofiam"];
 let noms = ["Jean", "Denis", "Fidy", "Rolland", "Rivo", "Robert", "Denis", "Jules", "Honoré", "Bertin", "Zaka", "Andry", "Lova", "Hery", "Zo"];
 let prenoms = ["Randrianirina", "Randrianaly", "Andriamaro", "Zainjafy", "Manambelo", "Andrianomena", "Ramanandraibe", "Rasolofo", "Rakotoarivelo", "Radavida"];
 let lettres_im = ["FA", "FB", "FC", "FE", "FD", "FH", "FG", "TA", "TB", "TC", "TD", "TE", "TF", "TG", "TAA", "TAB","TAC", "TBE", "TBF", "TBG", "THA","TGE"];
 let couleurs = ["Blanche", "Gris", "Bleue", "Verte", "Rouge", "Violet", "Orange", "Jaune"];
+let prix = ["10000", "15000","20000","25000","30000","40000","50000"];
+let classes = [{clv_libelle: "Premium"},
+                {clv_libelle: "VIP"}, 
+                {clv_libelle: "Standard"}];
+let type_voiture = [{typv_nom: "Mini-bus 18 places",
+                    typv_description: "18;2;16;4;3;3;1",
+                    typv_url_image: "/aucun"
+                    },
+                    {typv_nom: "Mini-bus 14 places",
+                    typv_description: "18;2;16;3;3;3;1",
+                    typv_url_image: "/aucun"
+                    },
+                    {typv_nom: "Sprinter 22 places",
+                    typv_description: "18;2;20;4;3;3;1",
+                    typv_url_image: "/aucun"
+                    }
+                  ];
+  let classes_types = [{typv_id: 1,
+                          clv_id: 3},
+                        {typv_id: 2,
+                          clv_id: 1},
+                        {typv_id: 3,
+                          clv_id: 1}];
 
 /**
  * @author Andry
@@ -31,24 +54,27 @@ class AlimentationModel extends Model {
       let villes = await this.select('ville', {}, {}, true, 0, 0, false);
       let default_parameter = {
         guichet_id: null,
-        param_heuredepfixe: "1",
-        param_vehicdiffheuredep: "60",
-        param_vehicchaqueclasse: "0",
-        param_chaufpermute: "0",
-        param_autorisationsansavance: "1",
-        param_invaliderresretardpaye: "1",
-        param_invaliderresnonpaye: "0",
-        param_paritinparclasse: "1",
+        param_utiliseclasse: 0,
+        param_typevoitureparclasse: 0,
+        param_heuredepartfixe: 1,
+        param_paramminutearriveavantdepart: 30,
+        param_minuteretardtolere: 15,
+        param_permutationchauffeur: 0,
+        param_reservesansavance: 1,
+        param_supprreservesansavanceavant: 24,
+        param_supprreservenoncompleteavant: 1,
+        param_typevehiculefixeparheuredepart: 1,
+        param_frais: 1,
+        param_typevehiculereservationpardefaut: "1, 2",
         param_nbvehicreservsimultane: "5",
         param_annulerreservparclient: "1",
-        param_affectchauffvehic: "0"
       };
     debug('Villes et provinces récupérées');
     if(villes != false) {
         let nbville = _.keys(villes).length;
         //Loop coopératives
         debug("Début traitement cooperative");
-        this.generateDbCoop("vatsy", {default_parameter, provinces, villes}, 0);
+        this.generateDbCoop("cotisse", {default_parameter, provinces, villes}, 0);
     } else {
       debug("Aucune ville dans la base!!! Opération annulée")
     }
@@ -108,6 +134,9 @@ class AlimentationModel extends Model {
                         await model.createDbStructure();
                         if(!param_parguichet) {
                           param.guichet_id = null;
+                          param.param_utiliseclasse = utilities.getRndInteger(0, 1);
+                          param.param_typevoitureparclasse = utilities.getRndInteger(0, 1);
+                          param.param_frais = utilities.getRndInteger(1, 4);
                           debug("Insertion paramètres pour tous les guichets");
                           await model.insert("parametre", param, false, true, false);
                         }
@@ -117,8 +146,24 @@ class AlimentationModel extends Model {
                         });
                         debug("Insertion des villes!");
                         await utilities.forEach(villes, async function(ville) {
-                          model.insert("ville", ville, false, true, false);
+                          await model.insert("ville", ville, false, true, false);
                         }); 
+                        debug("Insertion des types de voiture par défaut");
+                        await utilities.forEach(type_voiture, async function(type_v) {
+                          await model.insert("type_vehicule", type_v, false, true, false);
+                        });
+                        if(param.param_utiliseclasse == 1) {
+                          debug("Insertion des classes");
+                          await utilities.forEach(classes, async function(classe) {
+                            await model.insert("classe_vehicule", classe, false, true, false);
+                          });
+                          if(param.param_typevoitureparclasse == 1) {
+                            debug("Affectation des types de véhicules aux classes");
+                            await utilities.forEach(classes_types, async function(ctype) {
+                              await model.insert("type_classe", ctype, false, true, false);
+                            });
+                          }
+                        }
                         let nbguichet = utilities.getRndInteger(1, nbville);
                         let nbvoiture = nbguichet * utilities.getRndInteger(2, 4);
                         let maxoffset = nbville - nbguichet;
@@ -139,8 +184,12 @@ class AlimentationModel extends Model {
                               voituredone = true;
                             }
                           }
-                          let numtelchauffeur = "03"+utilities.getRndInteger(2, 4)+utilities.getRndInteger(1000000, 9999999);
-                          let idvoiture = await model.insert("vehicule", {vehic_numero: numerovoiture, vehic_couleur: couleurvoiture}, false, true, false);
+                          let numtelchauffeur = "03"+utilities.getRndInteger(2, 4)+""+utilities.getRndInteger(1000000, 9999999);
+                          let info_voiture =  {typv_id: utilities.getRndInteger(1,3), vehic_numero: numerovoiture, vehic_couleur: couleurvoiture};
+                          if(param.param_utiliseclasse == 1 && param.param_typevoitureparclasse == 0) {
+                            info_voiture.clv_id = utilities.getRndInteger(1, 3);
+                          }
+                          let idvoiture = await model.insert("vehicule",info_voiture, false, true, false);
                           let idchauffeur = await model.insert("chauffeur", {chauf_nom: nom_chauffeur, chauf_tel: numtelchauffeur}, false, true, false);
                           if(idvoiture && idchauffeur) {
                             let date = new Date();
@@ -174,6 +223,9 @@ class AlimentationModel extends Model {
                             });
                             if(param_parguichet) {
                               param.guichet_id = idguichet;
+                              param.param_utiliseclasse = utilities.getRndInteger(0, 1);
+                              param.param_typevoitureparclasse = utilities.getRndInteger(0, 1);
+                              param.param_frais = utilities.getRndInteger(1, 4);
                               debug("Insertion paramètre duichet "+idguichet);
                               await model.insert("parametre", param, false, true, false);
                             }
@@ -189,6 +241,26 @@ class AlimentationModel extends Model {
                               } else {
                                 info_itineraire.itin_id = id_itineraire;
                                 itineraires.push(info_itineraire);
+                                switch(param.param_frais) {
+                                  case 2: //par itinéraire et type de véhicule
+                                        await utilities.forEach(type_voiture, async function(type_v) {
+                                          await model.insert("frais", {itin_id: id_itineraire, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                        });
+                                        break;
+                                  case 2: //par itinéraire et classe
+                                        await utilities.forEach(classes, async function(classe, i) {
+                                          await model.insert("frais", {itin_id: id_itineraire, clv_id: (i + 1), frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                        });
+                                        break;
+                                  case 2: //par itinéraire et classe et type de véhicule
+                                        await utilities.forEach(classes_types, async function(ctype) {
+                                          await model.insert("frais", {itin_id: id_itineraire, clv_id: ctype.clv_id, typv_id: ctype.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                        });
+                                        break;
+                                  default: //par itinéraire uniquement
+                                        await model.insert("frais", {itin_id: id_itineraire, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                        break;
+                                }
                               }
                             });
                           }
@@ -285,6 +357,7 @@ class AlimentationModel extends Model {
                     //debug(res);
                   } else {
                     debug(err);
+                    debug(query);
                     reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
                   }
                 });
@@ -296,6 +369,7 @@ class AlimentationModel extends Model {
                   //debug(res);
                 } else {
                   debug(err);
+                  debug(querycreate);
                   reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
                 }
               });

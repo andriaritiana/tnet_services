@@ -1,0 +1,8 @@
+18;2;16;4;3;3;1
+//0:nb de place
+//1:nb à l'avant
+//2:nb derrière
+//3:nb par banc
+//4:emplacement couloir (1= gauche, 2= milieu, 3= droite)
+//5:porte d'entrée passager (1= gauche, 2= droite, 3= droite,gauche, 4= derrière, 5= derrière, droite, 6= derrière, gauche, 7= full)
+//6:chaise sur la couloir (0:non, 1:oui)
