@@ -7,8 +7,8 @@ const model = new CatVehiculeModel(cooperative_name);
 
 router.get('/cat_vehicule',  (req, res) => {
   model.get_all_cat_vehicules()
-  .then(response => { res.json(response); })
-  .catch(error => { res.json(error);})
+  .then(response => {console.log(response);  res.send(response); })
+  .catch(error => {console.log(error);  res.send(error);})
 })
 
 router.get('/cat_vehicule/:id', (req, res) => {

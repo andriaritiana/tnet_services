@@ -7,8 +7,8 @@ const model = new TypeVehiculeModel(cooperative_name);
 
 router.get('/type_vehicule',  (req, res) => {
   model.get_all_type_vehicules()
-  .then( (response) => { res.json(response);})
-  .catch( (error) => { res.json(error);})
+  .then( (response) => { console.log(response); res.send(response);})
+  .catch( (error) => {console.log(error); res.send(error);})
 })
 
 router.get('/type_vehicule/:id', (req, res) => {
@@ -32,13 +32,13 @@ router.post("/type_vehicule/add", (req, res) => {
     model.control_duplicate(type_vehicule)
     .then(response => {
       if(response.data){
-        res.json(message.duplicate_value);
+         res.json(message.duplicate_value);
       }else{
         model.add_type_vehicule(type_vehicule)
-        .then(response => { res.json(response)})
-        .catch(error => { res.json(error)});
+        .then(response => {  res.json(response)})
+        .catch(error => {  res.json(error)});
       }})
-    .catch(error => { res.json(error) });
+    .catch(error => {  res.json(error) });
   }
 });
 
@@ -57,15 +57,15 @@ router.post("/type_vehicule/update", (req, res) => {
       .control_duplicate_update(type_vehicule_update)
       .then(response => {
         if (response.data) {
-          res.json(message.duplicate_value);
+           res.json(message.duplicate_value);
         } else {
           model
             .update_type_vehicule(type_vehicule_update)
             .then(response => {
-              res.json(response);
+               res.json(response);
             })
             .catch(error => {
-              res.json(error);
+               res.json(error);
             });
         }
       })
@@ -80,8 +80,8 @@ router.post("/type_vehicule/delete",  (req, res) => {
       coop_id: req.body.coop_id
     }
   model.delete_type_vehicule(type_vehicule)
-    .then(response => { res.json(response) })
-    .catch(error => { res.json(error) })
+    .then(response => {  res.json(response) })
+    .catch(error => {  res.json(error) })
   }
 });
 

@@ -7,8 +7,8 @@ const model = new VoyageModel(cooperative_name);
 
 router.get('/voyage',  (req, res) => {
   model.get_all_voyages()
-  .then( (response) => { res.json(response);})
-  .catch( (error) => { res.json(error);})
+  .then( (response) => { console.log(response); res.json(response);})
+  .catch( (error) => { console.log(error); res.json(error);})
 })
 
 router.get('/voyage/:id', (req, res) => {
