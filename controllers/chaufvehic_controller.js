@@ -7,8 +7,8 @@ const model = new ChaufVehicModel(cooperative_name);
 
 router.get('/chaufvehic',  (req, res) => {
   model.get_all_chaufvehics()
-  .then(response => { res.json(response); })
-  .catch(error => { res.json(error);})
+  .then(response => { console.log(response); res.json(response); })
+  .catch(error => { console.log(error); res.json(error);})
 })
 
 router.get('/chaufvehic/:id', (req, res) => {
