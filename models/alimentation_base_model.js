@@ -5,7 +5,7 @@ const tables = require('./core/db_tables');
  * Variables global utilisés pour générer les données 
  * Outre la liste des coopératives, les données sont utilisés de manière aléatoire
  */
-let cooperatives = ["cotisse", "vatsy", "kofimanga", "kofiam"];
+let cooperatives = ["cotisse", "vatsy", "kofimanga", "kofiam", "cotrama", "mami", "cotrasud", "fifiabe", "transwell", "madatrans", "bandebleu"];
 let noms = ["Jean", "Denis", "Fidy", "Rolland", "Rivo", "Robert", "Denis", "Jules", "Honoré", "Bertin", "Zaka", "Andry", "Lova", "Hery", "Zo"];
 let prenoms = ["Randrianirina", "Randrianaly", "Andriamaro", "Zainjafy", "Manambelo", "Andrianomena", "Ramanandraibe", "Rasolofo", "Rakotoarivelo", "Radavida"];
 let lettres_im = ["FA", "FB", "FC", "FE", "FD", "FH", "FG", "TA", "TB", "TC", "TD", "TE", "TF", "TG", "TAA", "TAB","TAC", "TBE", "TBF", "TBG", "THA","TGE"];
@@ -87,7 +87,7 @@ class AlimentationModel extends Model {
   /**
    * Fonction qui peut être appelée récursivement pour générer la structure est les contenues d'une base d'une coopérative
    * @param {string} name 
-   * @param {array(parametre_duichet, procinces, villes)} parametre 
+   * @param {array(parametre_guichet, procinces, villes)} parametre 
    * @param {int} index //Index de la coopérative dans la liste
    * @param {bool} recursive 
    */
@@ -149,9 +149,15 @@ class AlimentationModel extends Model {
                           await model.insert("ville", ville, false, true, false);
                         }); 
                         debug("Insertion des types de voiture par défaut");
+                        let types_temp = [];
                         await utilities.forEach(type_voiture, async function(type_v) {
-                          await model.insert("type_vehicule", type_v, false, true, false);
+                          let idtype = await model.insert("type_vehicule", type_v, false, true, false);
+                          if(idtype) {
+                            type_v.typv_id = idtype;
+                            types_temp.push(type_v);
+                          }
                         });
+                        type_voiture = types_temp;
                         if(param.param_utiliseclasse == 1) {
                           debug("Insertion des classes");
                           await utilities.forEach(classes, async function(classe) {
@@ -226,7 +232,7 @@ class AlimentationModel extends Model {
                               param.param_utiliseclasse = utilities.getRndInteger(0, 1);
                               param.param_typevoitureparclasse = utilities.getRndInteger(0, 1);
                               param.param_frais = utilities.getRndInteger(1, 4);
-                              debug("Insertion paramètre duichet "+idguichet);
+                              debug("Insertion paramètre du guichet "+idguichet);
                               await model.insert("parametre", param, false, true, false);
                             }
                             await utilities.forEach(ville_arrivees, async function(ville_arrive) {
@@ -254,7 +260,9 @@ class AlimentationModel extends Model {
                                         break;
                                   case 2: //par itinéraire et classe et type de véhicule
                                         await utilities.forEach(classes_types, async function(ctype) {
-                                          await model.insert("frais", {itin_id: id_itineraire, clv_id: ctype.clv_id, typv_id: ctype.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                          await utilities.forEach(type_voiture, async function(type_v) {
+                                            await model.insert("frais", {itin_id: id_itineraire, clv_id: ctype.clv_id, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                          });
                                         });
                                         break;
                                   default: //par itinéraire uniquement

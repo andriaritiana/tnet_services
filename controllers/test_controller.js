@@ -8,7 +8,8 @@ router.get('/alimenter', async function (req, res) {
 	try {
         base = new baseModel("default");
 		let result = await base.lancer_alimentation_auto();
-  		debug(result);
+		  debug(result);
+		res.json({status: 1, message: "Database(s) créée(s)"});
 	} catch (e) {
 		debug(e);
 		res.status(500).json({status: 0, message: "Erreur de traitement survenue"});

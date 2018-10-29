@@ -69,7 +69,6 @@ let tables = {
                 "alter table frais add constraint fk_frais_as_20_classe_v foreign key (clv_id)    references classe_vehicule (clv_id)    on delete restrict on update restrict",
                 "alter table guichet add constraint fk_guichet_asoc_12_ville foreign key (ville_id)    references ville (ville_id)    on delete restrict on update restrict",
                 "alter table guichet add constraint fk_guichet_asos_20_parametr foreign key (param_id)    references parametre (param_id)    on delete restrict on update restrict",
-                "alter table guichet add constraint fk_guichet_utiliser_cooperat foreign key (coop_id)    references cooperative (coop_id)    on delete restrict on update restrict",
                 "alter table guichetier add constraint fk_guicheti_as_18_guichet foreign key (guichet_id)    references guichet (guichet_id)    on delete restrict on update restrict",
                 "alter table itineraire add constraint fk_itinerai_programer_guichet foreign key (guichet_id)    references guichet (guichet_id)    on delete restrict on update restrict",
                 "alter table listage add constraint fk_listage_as_21_chauffve foreign key (chaufvehic_id)    references chauffvehic (chaufvehic_id)    on delete restrict on update restrict",
