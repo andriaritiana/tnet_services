@@ -10,49 +10,55 @@ class ProvinceModel extends Model {
     }
 
     get_provinces_with_info() {
+        let model = this;
         return new Promise(async (resolve, reject) => {
-            let provinces = await this.select("province", {}, "province.*, (select count(distinct coop_id) from ville join itineraire on itineraire.itin_arrivee = ville.ville_id join coop_itin on coop_itin.itin_id = itineraire.itin_id where ville.prov_id = province.prov_id) as nb_province", true);
+            let provinces = await model.select("province", {}, "prov_id, trim(both from prov_nom) as prov_nom, prov_description, (select count(distinct coop_id) from ville join itineraire on itineraire.itin_arrivee = ville.ville_id join coop_itin on coop_itin.itin_id = itineraire.itin_id where ville.prov_id = province.prov_id) as nb_province", true, 0, 0, false, "prov_id asc");
             if(provinces != false) {
-                debug(utilities.randinteger(2,6));
-                _.map(provinces, function(prov) {
-                    let province = prov;
-                    if(province.nb_province > 0) {
+                debug(utilities.getRndInteger(2,6));
+                await utilities.forEach(provinces, async function(prov) {
+                    if(prov.nb_province > 0) {
                         let beginin = 0;
-                        if(province.nb_province > 5) {
-                            let max = nb_province - 5;
-                            beginin = utilities.randinteger(0,max);
+                        if(parseInt(prov.nb_province) > 5) {
+                            let max = parseInt(prov.nb_province) - 5;
+                            beginin = utilities.getRndInteger(0,max);
                         }
-                        let cooperatives = this.select_join("cooperative", 
-                                                            [["coop_itin", "coop_itin.coop_id = cooperative.coop_id"], 
-                                                             ["itineraire", "coop_itin.itin_id = itineraire.itin_id"],
-                                                             ["ville", "itineraire.itin_arrivee = ville.ville_id"]],
-                                                            {prov_id: province.prov_id},
-                                                            "distinct cooperative.*", 
-                                                            true,
-                                                            beginin, 5);
-                        _.map(cooperatives, function(coop) {
-                            let arrivees = this.select_join("itineraire", 
-                                                            [["coop_itin", "coop_itin.itin_id = itineraire.itin_id"],
-                                                            ["ville", "itineraire.itin_arrivee = ville.ville_id"]],
-                                                            {coop_id: coop.coop_id},
-                                                            "distinct ville.*", 
-                                                            true);
-                            let cooperative = coop;
-                            if(_.keys(arrivees).length > 0) {
-                                cooperative.ville = arrivees[utilities.randinteger(0, _.keys(arrivees).length)];
-                            }
-                            return cooperative;
-                        });
+                        prov.infos = await model.getProvinceInfos(prov.prov_id, beginin);
                     } else {
-                        province.infos = [];
+                        prov.infos = [];
                     }
-                    return province;
                 });
-                //debug(provinces);
+                debug(provinces);
+                //model.client.end();
                 resolve({status:1, message: "Données récupérées", data:provinces});
             } else {
                 reject(new error.DatabaseError("Erreur de récupération des données"));
             }
+        });
+    }
+
+    getProvinceInfos(idprov, beginin) {
+        let model = this;
+        return new Promise(async (resolve, reject) => {
+            let cooperatives = await model.select_join("cooperative", 
+                                                            [["coop_itin", "coop_itin.coop_id = cooperative.coop_id"], 
+                                                             ["itineraire", "coop_itin.itin_id = itineraire.itin_id"],
+                                                             ["ville", "itineraire.itin_arrivee = ville.ville_id"]],
+                                                            {prov_id: idprov},
+                                                            "distinct cooperative.*", 
+                                                            true,
+                                                            5, beginin, false);
+            await utilities.forEach(cooperatives, async function(coop) {
+                let arrivees = await model.select_join("itineraire", 
+                                                [["coop_itin", "coop_itin.itin_id = itineraire.itin_id"],
+                                                ["ville", "itineraire.itin_arrivee = ville.ville_id"]],
+                                                {coop_id: coop.coop_id},
+                                                "distinct ville.*", 
+                                                true, 0, 0, false);
+                if(_.keys(arrivees).length > 0) {
+                    coop.ville = arrivees[utilities.getRndInteger(0, _.keys(arrivees).length - 1)];
+                }
+            });
+            resolve(cooperatives);
         });
     }
 }

@@ -41,11 +41,12 @@ class CoreModel {
 	* @param bool end (Fermer le client ou laisser ouvert) 
 	* @return object (JSON)
 	*/
-	select(table, data_condition, data_champ, nostatus, limit, offset, end) {
+	select(table, data_condition, data_champ, nostatus, limit, offset, end, orderby) {
 		var end = typeof end == "undefined" ? true : end;
 		var nostatus = (typeof nostatus !== 'undefined') ? nostatus : false;
 		var limit = (typeof limit !== 'undefined') ? limit : 0;
 		var offset = (typeof offset !== 'undefined') ? offset : 0;
+		var orderby = (typeof orderby !== 'undefined') ? orderby : false;
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
@@ -60,6 +61,9 @@ class CoreModel {
 				}
 				if(offset > 0) {
 					querystring += " offset "+offset;
+				}
+				if(orderby) {
+					querystring += " order by "+orderby;
 				}
 				debug(querystring);
 				model.client.query(querystring, (err, res) => {
@@ -353,9 +357,9 @@ class CoreModel {
 						}
 					});
 				} else if(_.keys(data).length == 1) {
-					return _.keys(data)[0]+(data[_.keys(data)[0]] == null  || data[_.keys(data)[0]].toLowerCase() == "null" ? " is null" 
-									: data[_.keys(data)[0]].toLowerCase() == "is not null" ? " is not null" 
-									: data[_.keys(data)[0]].split(' ')[1] == undefined ? " = '"+data[_.keys(data)[0]].replace("'","''")+"'"
+					return _.keys(data)[0]+(data[_.keys(data)[0]] == null  || (data[_.keys(data)[0]]+"").toLowerCase() == "null" ? " is null" 
+									: (data[_.keys(data)[0]]+"").toLowerCase() == "is not null" ? " is not null" 
+									: (data[_.keys(data)[0]]+"").split(' ')[1] == undefined ? " = '"+(data[_.keys(data)[0]]+"").replace("'","''")+"'"
 									: " "+data[_.keys(data)[0]].split(' ')[0]+" '"+data[_.keys(data)[0]].split(' ')[1].replace("'","''")+"'");
 				} else { //vide
 					return "true";
