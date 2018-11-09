@@ -1,15 +1,15 @@
 const Model = require('./core/model');
 
-/* config_db = {
+config_db = {
   user: 'postgres',
       host: 'localhost',
-          database: 'db_coop_cotisse',
+          database: 'db_coop_vatsy',
               password: 'root',
                   port: '5432'
 }
 
 const pg = require('pg');
-const pool = new pg.Pool(config_db); */
+const pool = new pg.Pool(config_db);
 
 class VilleModel extends Model {
   constructor(subdomain) {
