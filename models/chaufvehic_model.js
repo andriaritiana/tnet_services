@@ -11,7 +11,10 @@ class ChaufVehicModel extends Model {
   }
 
   get_all_chaufvehics() {
-    return this.select(this.table, {}, {});
+    return this.select_join(this.table, [
+      "chauffeur ON chauffeur.chauf_id = chauffvehic.chauf_id",
+      "vehicule ON vehicule.vehic_id = chauffvehic.vehic_id"
+    ], {}, [], true);
   }
 
   add_chaufvehic(chaufvehics) {

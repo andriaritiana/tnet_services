@@ -1,16 +1,5 @@
 const Model = require('./core/model');
 
-config_db = {
-  user: 'postgres',
-      host: 'localhost',
-          database: 'db_coop_vatsy',
-              password: 'root',
-                  port: '5432'
-}
-
-const pg = require('pg');
-const pool = new pg.Pool(config_db);
-
 class VilleModel extends Model {
   constructor(subdomain) {
     super(subdomain);
@@ -22,18 +11,7 @@ class VilleModel extends Model {
   }
 
   get_all_villes() {
-    //return this.select(this.table, {}, {});
-      return new Promise(function (resolve, reject) {
-          pool.query('SELECT * FROM ville v LEFT JOIN province p ON p.province_id = v.province_id', (err, res) => {
-              if (!err) {
-                  console.log("Value");
-                  resolve(res.rows);
-              } else {
-                console.log("Error");
-                  reject(err);
-              }
-          });
-      });
+    return this.select_join(this.table, ["province ON province.province_id = ville.province_id"], {}, [], true);
   }
 
   add_ville(villes) {

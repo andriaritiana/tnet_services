@@ -11,7 +11,7 @@ class TypeVehiculeModel extends Model {
   }
 
   get_all_type_vehicules() {
-    return this.select(this.table, {}, {});
+    return this.select(this.table, {}, [], true);
   }
 
   add_type_vehicule(type_vehicules) {

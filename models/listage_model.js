@@ -11,7 +11,11 @@ class ListageModel extends Model {
   }
 
   get_all_listages() {
-    return this.select(this.table, {}, {});
+    return this.select_join(this.table, [
+      "chauffvehic ON chauffvehic.chaufvehic_id = listage.chaufvehic_id",
+      "chauffeur ON chauffeur.chauf_id = chauffvehic.chauf_id",
+      "vehicule ON vehicule.vehic_id = chauffvehic.vehic_id",
+    ], {}, [], true);
   }
 
   add_listage(listages) {

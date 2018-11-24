@@ -7,8 +7,8 @@ const model = new VilleModel(cooperative_name);
 
 router.get('/ville',  (req, res) => {
   model.get_all_villes()
-  .then(response => { console.log(response); res.send(response); })
-  .catch(error => { console.log(response); res.send(error);})
+  .then(response => {res.send(response); })
+  .catch(error => {res.send(error);})
 })
 
 router.get('/ville/:id', (req, res) => {

@@ -11,7 +11,9 @@ class VehiculeModel extends Model {
   }
 
   get_all_vehicules() {
-    return this.select(this.table, {}, {});
+    return this.select_join(
+      this.table, ["type_vehicule ON type_vehicule.typv_id = vehicule.typv_id"], {}, [], true
+      );
   }
 
   add_vehicule(vehicules) {

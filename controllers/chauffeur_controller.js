@@ -7,8 +7,8 @@ const model = new ChauffeurModel(cooperative_name);
 
 router.get('/chauffeur',  (req, res) => {
   model.get_all_chauffeurs()
-  .then(response => { console.log(response); res.json(response); })
-  .catch(error => { console.log(error); res.json(error);})
+  .then(response => {res.send(response); })
+  .catch(error => { res.send(error);})
 })
 
 router.get('/chauffeur/:id', (req, res) => {

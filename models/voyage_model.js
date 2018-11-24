@@ -11,7 +11,16 @@ class VoyageModel extends Model {
   }
 
   get_all_voyages() {
-    return this.select(this.table, {}, {});
+    return this.select_join(this.table,[
+      "listage ON listage.listage_id = voyage.listage_id",
+      "chauffvehic ON chauffvehic.chaufvehic_id = listage.chaufvehic_id",
+      "chauffeur ON chauffeur.chauf_id = chauffvehic.chauf_id",
+      "vehicule ON vehicule.vehic_id = chauffvehic.vehic_id",
+      "type_vehicule ON type_vehicule.typv_id = voyage.typv_id",
+      "classe_vehicule ON classe_vehicule.cl_vehic_id = voyage.cl_vehic_id",
+      "itineraire ON itineraire.itin_id = voyage.itin_id",
+      "guichet ON guichet.guichet_id = itineraire.guichet_id"
+    ], {}, [], true);
   }
 
   add_voyage(voyages) {

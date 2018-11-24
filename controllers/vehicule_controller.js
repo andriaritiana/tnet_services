@@ -4,10 +4,11 @@ const Joi = require('joi');
 
 const VehiculeModel = require("../models/vehicule_model");
 const model = new VehiculeModel(cooperative_name);
+
 router.get('/vehicule',  (req, res) => {
   model.get_all_vehicules()
-  .then( (response) => {console.log(response); res.send(response);})
-  .catch( (error) => {console.log(error); res.send(error);})
+  .then( (response) => {res.send(response);})
+  .catch( (error) => {res.send(error);})
 })
 
 router.get('/vehicule/:id', (req, res) => {

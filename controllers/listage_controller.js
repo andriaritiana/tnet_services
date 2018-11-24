@@ -7,8 +7,8 @@ model = new ListageModel(cooperative_name);
 
 router.get('/listage',  (req, res) => {
   model.get_all_listages()
-  .then( (response) => {console.log(response);  res.send(response);})
-  .catch( (error) => {console.log(error);  res.send(error);})
+  .then( (response) => {res.send(response);})
+  .catch( (error) => {res.send(error);})
 })
 
 router.get('/listage/:id', (req, res) => {

@@ -11,7 +11,7 @@ class ChauffeurModel extends Model {
   }
 
   get_all_chauffeurs() {
-    return this.select(this.table, {}, {});
+    return this.select(this.table, {}, [], true);
   }
 
   add_chauffeur(chauffeurs) {
