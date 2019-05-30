@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "start:debug": "DEBUG=app:startup nodemon index.js",
+    "populate": "DEBUG=app:population node db/seeders.js",
+    "purge": "DEBUG=app:population NODE_ENV=purge node db/seeders.js"
   },
   "repository": {
     "type": "git",
@@ -22,7 +25,7 @@
   "homepage": "https://github.com/andriaritiana/tnet_services#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "config": "^2.0.1",
+    "config": "^2.0.2",
     "debug": "^3.1.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",

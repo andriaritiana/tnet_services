@@ -1,3 +1,39 @@
 {
+  "db" : {
+    "connection": {
+      "user": "postgres",
+      "host": "localhost",
+      "password": "root",
+      "port": 5432
+    },
+    "list": {
+      "cotisse": "db_coop_cotisse",
+      "vatsy": "db_coop_vatsy",
+      "kofimanga": "db_coop_kofimanga", 
+      "kofiam": "db_coop_kofiam", 
+      "cotrama": "db_coop_cotrama", 
+      "mami": "db_coop_mami", 
+      "cotrasud": "db_coop_cotrasud", 
+      "fifiabe": "db_coop_fifiabe", 
+      "transwell": "db_coop_transwell", 
+      "madatrans": "db_coop_madatrans", 
+      "bandebleu": "db_coop_bandebleu",
+      "default": "db_transnet"
+    },
+    "list_test": {
+      "cotisse": "dbtest_coop_cotisse",
+      "vatsy": "dbtest_coop_vatsy",
+      "kofimanga": "dbtest_coop_kofimanga", 
+      "kofiam": "dbtest_coop_kofiam", 
+      "cotrama": "dbtest_coop_cotrama", 
+      "mami": "dbtest_coop_mami", 
+      "cotrasud": "dbtest_coop_cotrasud", 
+      "fifiabe": "dbtest_coop_fifiabe", 
+      "transwell": "dbtest_coop_transwell", 
+      "madatrans": "dbtest_coop_madatrans", 
+      "bandebleu": "dbtest_coop_bandebleu",
+      "default": "dbtest_transnet"
+    }
+  },
   "name":"TransNet Mada"
 }

@@ -1,5 +1,6 @@
-const { Client } = require('pg');
-const config = require('../../config/db_config');
+const { Client } = require('pg')
+const { connection, list, list_test } = require('config').db
+const config = { ...connection }
 if (typeof String.prototype.contains === 'undefined') { 
 	String.prototype.contains = function(it) { return this.indexOf(it) != -1; }; 
 }
@@ -13,7 +14,7 @@ class CoreModel {
 	* Le constructeur doit toujours recevoir le nom du sous-domaine en paramètre
 	*/
 	constructor(subdomain) {
-		this.dbliste = require('../../config/db_list');
+		this.dbliste = process.env.NODE_ENV == "test" ? { ...list_test } : { ...list }
 		this.loadDatabase(subdomain);
 	}
 
@@ -169,8 +170,6 @@ class CoreModel {
 					reject(nostatus ? false : {status:0, message: "Aucune ligne à insérer"});
 				} else {
 					if(multiple) {
-						var has_error = false;
-						var ids = [], errors = [];
 						var data_row = "";
 						var values = "";
 						_.each(data, function(data1) {

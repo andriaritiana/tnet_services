@@ -1,0 +1,10 @@
+{
+  "db" : {
+      "connection": {
+      "user": "andriaritiana",
+      "host": "localhost",
+      "password": "admin321",
+      "port": 5432
+    }
+  }
+}
