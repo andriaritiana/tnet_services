@@ -2,6 +2,7 @@
 const Model = require('./core/model')
 const queries = require('../db/table_queries')
 const purgeQueries = require('../db/purge_queries')
+const moment = require('moment')
 const { cooperativesToCreate, cooperatives, names, lastNames, lettersIm, prix, classes, classesTypes, typeVehicle, defaultParams, colors } = require('../db/vars')
 
 /**
@@ -18,55 +19,77 @@ class AlimentationModel extends Model {
   purgeDatabase() {
     const model = this;
     debug('run purge');
-    return new Promise( async (resolve, reject) => {
-       await utilities.forEach(cooperatives, async (coopName) => {
+    return Promise.all([
+      ...(cooperatives.map((coopName) => {
+        return new Promise( (resolve, reject) => {
           let dropQuery = `drop database if exists ${ process.env.NODE_ENV == "test" ? "dbtest" : "db" }_coop_${ coopName }`
-          await model.client.query( dropQuery, (err, res) => {
+          model.client.query( dropQuery, (err) => {
             if(err == null) {
-              //debug(res);
+              debug(`${ coopName } database dropped successfully`)
+              resolve(true)
             } else {
               debug(err);
               debug(dropQuery);
-              reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
+              reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err))
             }
-          });
-      });
-      await utilities.forEach(purgeQueries, async (query) => {
-        await model.client.query( query, (err, res) => {
-          if(err == null) {
-            //debug(res);
-          } else {
-            debug(err);
-            debug(query);
-            reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
-          }
-        });
-      })
-      debug("Purge complete");
-      resolve(true);
-    });
-      
+          })
+        })
+      })),
+      ...(purgeQueries.map((query) => {
+        return new Promise( (resolve, reject) => {
+          model.client.query( query, (err) => {
+            if(err == null) {
+              debug(`Query "${query}" executed!`)
+              resolve(true)
+            } else {
+              debug(err);
+              debug(query);
+              reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err))
+            }
+          })
+        })
+      }))
+    ]).then(() => {
+      debug('Purge query finished!')
+    }).catch((err)=> {
+      debug('An error happened when purging databases')
+      debug(err)
+    })
   }
 
   /**
    * Fonction appelée pour générer toutes les bases inexistantes dans la liste des bases de données
    */
   async lancer_alimentation_auto() {
+    const model = this
     try {
-      let provinces = await this.select('province', {}, {}, true, 0, 0, false);
-      let villes = await this.select('ville', {}, {}, true, 0, 0, false);
-      let default_parameter = { ...defaultParams };
+      const provinces = await this.select('province', {}, {}, true, 0, 0, false);
+      const villes = await this.select('ville', {}, {}, true, 0, 0, false);
+      const default_parameter = { ...defaultParams };
       debug('Villes et provinces récupérées');
       if(villes != false) {
           //Loop coopératives
-          debug("Début traitement cooperative");
-          this.generateDbCoop("cotisse", { default_parameter, provinces, villes }, 0);
+          debug("Début traitement cooperative")
+          let stop_populate = false
+          let index = 0
+          while(!stop_populate) {
+            if(cooperativesToCreate[index]) {
+              await model.generateDbCoop(cooperativesToCreate[index], { default_parameter, provinces, villes }, 0)
+              index += 1
+            } else {
+              stop_populate = true
+            }
+          }
+          model.client.end()
+          debug('Stopping database client connection')
       } else {
+        model.client.end()
         debug("Aucune ville dans la base!!! Opération annulée")
+        return Promise.reject(new error.DatabaseError("No ville in the transnet database"))
       }
-      debug('arret de la connexion à la base');
     } catch(e) {
-      debug(e);
+      debug(e)
+      return Promise.reject(new error.DatabaseError(`there was an error : ${e}`))
     }
   }
 
@@ -79,7 +102,7 @@ class AlimentationModel extends Model {
    */
   async generateDbCoop(name, parametre, index, recursive = true) {
     debug('Call for '+name)
-    const dbPrefix = process.env.NODE_ENV == "test" ? "dbtest" : "db"
+    const dbName = process.env.NODE_ENV == "test" ? `dbtest_coop_${name}` : `db_coop_${name}`
     const model = this
     let param = parametre.default_parameter
     const villes = parametre.villes
@@ -97,7 +120,7 @@ class AlimentationModel extends Model {
                             coop_urlimage: name+".png"	
                             };
 
-    (new Promise(async (resolve, reject) => {
+    return (new Promise(async (resolve, reject) => {
       try {
         model.select("cooperative", {coop_abrev: name},"", true, 0, 0, false).then(
           function(coopexist) {
@@ -108,7 +131,7 @@ class AlimentationModel extends Model {
                 async function(idcoop) {
                   if(idcoop) {
                     debug('cooperative inséré');
-                    let querystring = `create database ${ dbPrefix }_coop_${ name }`;
+                    let querystring = `create database ${ dbName }`;
                     let param_parguichet = utilities.getRndInteger(0,1) == 1;
                     //let dbcreated = false;
                     await model.client.query(querystring, async (err, res) => {
@@ -117,7 +140,7 @@ class AlimentationModel extends Model {
                         try {
                           debug("base créée");
                           debug(`Initialisation du structure de la base de ${ name }`);
-                          model.dbliste[name] = `${ dbPrefix }_coop_${ name }`;
+                          model.dbliste[name] = `${ dbName }`;
                           model.loadDatabase(name);
                           await model.createDbStructure();
                           if(!param_parguichet) {
@@ -126,16 +149,16 @@ class AlimentationModel extends Model {
                             param.param_typevoitureparclasse = utilities.getRndInteger(0, 1);
                             param.param_frais = utilities.getRndInteger(1, 4);
                             debug("Insertion paramètres pour tous les guichets");
-                            await model.insert("parametre", param, false, true, false);
+                            await model.insert(`parametre`, param, false, true, false);
                           }
                           debug("Insertion des provinces!");
-                          await utilities.forEach(provinces, async function(province) {
-                            await model.insert("province", province, false, true, false);
-                          });
+                          await Promise.all( provinces.map( (province) => {
+                            return model.insert(`province`, province, false, true, false)
+                          })) 
                           debug("Insertion des villes!");
-                          await utilities.forEach(villes, async function(ville) {
-                            await model.insert("ville", ville, false, true, false);
-                          }); 
+                          await Promise.all( villes.map( (ville) => {
+                            return model.insert(`ville`, ville, false, true, false)
+                          }))
                           debug("Insertion des types de voiture par défaut");
                           let types_temp = [];
                           await utilities.forEach(typeVehicle, async function(type_v) {
@@ -148,12 +171,12 @@ class AlimentationModel extends Model {
                           if(param.param_utiliseclasse == 1) {
                             debug("Insertion des classes");
                             await utilities.forEach(classes, async function(classe) {
-                              await model.insert("classe_vehicule", classe, false, true, false);
+                              await model.insert(`classe_vehicule`, classe, false, true, false);
                             });
                             if(param.param_typevoitureparclasse == 1) {
                               debug("Affectation des types de véhicules aux classes");
                               await utilities.forEach(classesTypes, async function(ctype) {
-                                await model.insert("type_classe", ctype, false, true, false);
+                                await model.insert(`type_classe`, ctype, false, true, false);
                               });
                             }
                           }
@@ -161,7 +184,7 @@ class AlimentationModel extends Model {
                           let nbvoiture = nbguichet * utilities.getRndInteger(2, 4);
                           let maxoffset = nbville - nbguichet;
                           let offset = utilities.getRndInteger(0, maxoffset);
-                          let ville_departs = await model.select("ville", {}, {}, true, nbguichet, offset, false);
+                          let ville_departs = await model.select(`ville`, {}, {}, true, nbguichet, offset, false);
                           debug("Début traitement des chauffeurs et véhicules");
                           for(let i = 0; i < nbvoiture; i++) {
                             let numerovoiture = utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+lettersIm[utilities.getRndInteger(0, lettersIm.length - 1)];
@@ -169,7 +192,7 @@ class AlimentationModel extends Model {
                             let couleurvoiture = colors[utilities.getRndInteger(0, colors.length - 1)];
                             let voituredone = false;
                             while(!voituredone) {
-                              let voitureexist = await model.select('vehicule', {vehic_numero: numerovoiture}, {}, true, 0, 0, false);
+                              let voitureexist = await model.select(`vehicule`, {vehic_numero: numerovoiture}, {}, true, 0, 0, false);
                               if(voitureexist != false) {
                                 debug(voitureexist);
                                 numerovoiture = utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+""+utilities.getRndInteger(0,9)+lettersIm[utilities.getRndInteger(0, lettersIm.length - 1)];
@@ -182,14 +205,13 @@ class AlimentationModel extends Model {
                             if(param.param_utiliseclasse == 1 && param.param_typevoitureparclasse == 0) {
                               info_voiture.clv_id = utilities.getRndInteger(1, 3);
                             }
-                            let idvoiture = await model.insert("vehicule",info_voiture, false, true, false);
-                            let idchauffeur = await model.insert("chauffeur", {chauf_nom: nom_chauffeur, chauf_tel: numtelchauffeur}, false, true, false);
+                            let idvoiture = await model.insert(`vehicule`,info_voiture, false, true, false);
+                            let idchauffeur = await model.insert(`chauffeur`, {chauf_nom: nom_chauffeur, chauf_tel: numtelchauffeur}, false, true, false);
                             if(idvoiture && idchauffeur) {
-                              let date = new Date();
-                              let idchauffvehic = await model.insert("chauffvehic", 
+                              let idchauffvehic = await model.insert(`chauffvehic`, 
                                                                     {chauf_id: idchauffeur,
                                                                       vehic_numero: idvoiture,
-                                                                      chaufvehic_date: date.getFullYear()+"-"+date.getMonth()+"-"+date.getDay()
+                                                                      chaufvehic_date: moment().format('Y-MM-DD')
                                                                     }, false, true, false);
                               if(!idchauffvehic) debug("Echec de traitement chauffeur véhicule voiture_id: "+id+" chauffeur_id: "+idchauffeur);
                             } else {
@@ -203,7 +225,7 @@ class AlimentationModel extends Model {
                                 guichet_nom: "Guichet de "+villedep.ville_nom,
                                 guichet_adresse: "Adresse à "+villedep.ville_nom
                             };
-                            let idguichet = await model.insert("guichet", info_guichet, false, true, false);
+                            let idguichet = await model.insert(`guichet`, info_guichet, false, true, false);
                             if(!idguichet) {
                               debug("Impossible d'insérer le guichet");
                             } else {
@@ -220,7 +242,7 @@ class AlimentationModel extends Model {
                                 param.param_typevoitureparclasse = utilities.getRndInteger(0, 1);
                                 param.param_frais = utilities.getRndInteger(1, 4);
                                 debug("Insertion paramètre du guichet "+idguichet);
-                                await model.insert("parametre", param, false, true, false);
+                                await model.insert(`parametre`, param, false, true, false);
                               }
                               await utilities.forEach(ville_arrivees, async function(ville_arrive) {
                                 let info_itineraire = {
@@ -228,7 +250,7 @@ class AlimentationModel extends Model {
                                     itin_depart: villedep.ville_id,
                                     itin_arrivee: ville_arrive.ville_id
                                 };
-                                let id_itineraire = await model.insert("itineraire", info_itineraire, false, true, false);
+                                let id_itineraire = await model.insert(`itineraire`, info_itineraire, false, true, false);
                                 if(!id_itineraire) {
                                   debug("Impossible d'insérer l'itinéraire");
                                 } else {
@@ -237,23 +259,23 @@ class AlimentationModel extends Model {
                                   switch(param.param_frais) {
                                     case 2: //par itinéraire et type de véhicule
                                           await utilities.forEach(types_temp, async function(type_v) {
-                                            await model.insert("frais", {itin_id: id_itineraire, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                            await model.insert(`frais`, {itin_id: id_itineraire, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
                                           });
                                           break;
                                     case 2: //par itinéraire et classe
                                           await utilities.forEach(classes, async function(classe, i) {
-                                            await model.insert("frais", {itin_id: id_itineraire, clv_id: (i + 1), frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                            await model.insert(`frais`, {itin_id: id_itineraire, clv_id: (i + 1), frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
                                           });
                                           break;
                                     case 2: //par itinéraire et classe et type de véhicule
                                           await utilities.forEach(classesTypes, async function(ctype) {
                                             await utilities.forEach(types_temp, async function(type_v) {
-                                              await model.insert("frais", {itin_id: id_itineraire, clv_id: ctype.clv_id, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                              await model.insert(`frais`, {itin_id: id_itineraire, clv_id: ctype.clv_id, typv_id: type_v.typv_id, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
                                             });
                                           });
                                           break;
                                     default: //par itinéraire uniquement
-                                          await model.insert("frais", {itin_id: id_itineraire, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
+                                          await model.insert(`frais`, {itin_id: id_itineraire, frais_montant: prix[utilities.getRndInteger(0, prix.length - 1)]}, false, true, false);
                                           break;
                                   }
                                 }
@@ -265,17 +287,17 @@ class AlimentationModel extends Model {
                             debug("Traitement des itineraires dans la base transnet!");
                             model.loadDatabase("default");
                             await utilities.forEach(itineraires, async function(itineraire) {
-                              let itin = await model.select("itineraire", {itin_depart: itineraire.itin_depart, itin_arrivee: itineraire.itin_arrivee}, {}, true, 0, 0, false);
+                              let itin = await model.select(`itineraire`, {itin_depart: itineraire.itin_depart, itin_arrivee: itineraire.itin_arrivee}, {}, true, 0, 0, false);
                               if(itin && _.keys(itin).length > 0) {
                                 let iditin = itin[0]["itin_id"];
-                                let info = await model.insert("coop_itin", {coop_id: idcoop, itin_id: iditin}, false, true, false);
+                                let info = await model.insert(`coop_itin`, {coop_id: idcoop, itin_id: iditin}, false, true, false);
                                 if(!info) {
                                   debug("Impossible d'ajouter l'itinéraire à la coop  "+name+" itin "+iditin);
                                 }
                               } else {
-                                let iditin = await model.insert("itineraire", {itin_depart: itineraire.itin_depart, itin_arrivee: itineraire.itin_arrivee}, false, true, false);
+                                let iditin = await model.insert(`itineraire`, {itin_depart: itineraire.itin_depart, itin_arrivee: itineraire.itin_arrivee}, false, true, false);
                                 if(iditin) {
-                                  let info = await model.insert("coop_itin", {coop_id: idcoop, itin_id: iditin}, false, true, false);
+                                  let info = await model.insert(`coop_itin`, {coop_id: idcoop, itin_id: iditin}, false, true, false);
                                   if(!info) {
                                     debug("Impossible d'ajouter l'itinéraire à la coop  "+name+" itin "+iditin);
                                   }
@@ -321,17 +343,13 @@ class AlimentationModel extends Model {
     })
     ).then(function(resp) {
       if(resp) {
-        if(recursive && cooperativesToCreate[index + 1] != undefined) {
-          model.generateDbCoop(cooperativesToCreate[index + 1], parametre, index + 1);
-        } else {
-          model.client.end();
-        }
+        debug(`Database of ${name} populated!`)
       } else {
-        debug('Une erreur inattendue a été rencontré avec la coopérative '+name);
+        debug(`Unexpected error when populating ${name}`)
       }
-    }).catch(function(resp) {
-      debug('reject >>> '+resp);
-      debug('Une erreur dans le traitement de la coopérative '+name);
+    }).catch(function(errors) {
+      debug(`Treatment error with the database of ${name}`)
+      debug(errors)
     });
   }
 
@@ -341,39 +359,42 @@ class AlimentationModel extends Model {
    */
   async createDbStructure() {
     const model = this;
-    debug('run create');
-    return new Promise( async (resolve, reject) => {
-       await utilities.forEach(queries, async function(querycreate) {
-            if(_.isArray(querycreate)) {
-              await utilities.forEach(querycreate, async function(query) {
-                //debug(query);
-                await model.client.query(query, (err, res) => {
+    debug('run database create queries >>');
+    return Promise.all( Object.keys(queries).map( (queryIndex) => {
+      return new Promise( (resolve, reject) => {
+        if(_.isArray(queries[queryIndex])) {
+          resolve(Promise.all(
+            queries[queryIndex].map( (query) => {
+              return new Promise( (rslv, rjct) => {
+                model.client.query(query, (err, res) => {
                   if(err == null) {
-                    //debug(res);
+                    debug(`${query} executed`)
+                    rslv(true)
                   } else {
-                    debug(err);
-                    debug(query);
-                    reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
+                    debug(`${query} has an execution error`)
+                    debug(err)
+                    rjct(new error.DatabaseError("Echec de l'exécution de la requête : "+err))
                   }
-                });
-              });
+                })
+              })
+            })
+          ))
+        } else {
+          model.client.query(queries[queryIndex], (err, res) => {
+            if(err == null) {
+              debug(`${queries[queryIndex]} executed`)
+              resolve(true)
             } else {
-              //debug(querycreate);
-              await model.client.query(querycreate, (err, res) => {
-                if(err == null) {
-                  //debug(res);
-                } else {
-                  debug(err);
-                  debug(querycreate);
-                  reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err));
-                }
-              });
+              debug(`${queries[queryIndex]} has an execution error`)
+              debug(err)
+              reject(new error.DatabaseError("Echec de l'exécution de la requête : "+err))
             }
           });
-      debug("resolve");
-      resolve(true);
-    });
-    
+        }
+      })
+    })).then(() => {
+      debug('Db structure created successfully!!')
+    })
   }
 }
 

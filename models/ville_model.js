@@ -6,20 +6,20 @@ class VilleModel extends Model {
     super(subdomain);
   }
 
-  get_all_villes() {
-  	return this.select("ville", {}, {});
+  get_all_villes(end = true) {
+  	return this.select("ville", {}, {}, false, 0, 0, end);
   }
 
-  add_ville(ville) {
-  	return this.insert("ville", ville, false);
+  add_ville(ville, end = true) {
+  	return this.insert("ville", ville, false, false, end);
   }
 
-  update_ville(info, condition) {
-  	return this.update("ville", condition, info);
+  update_ville(info, condition, end = true) {
+  	return this.update("ville", condition, info, end);
   }
 
-  delete_ville(condition) {
-  	return this.delete("ville", condition);
+  delete_ville(condition, end = true) {
+  	return this.delete("ville", condition, end);
   }
 }
 

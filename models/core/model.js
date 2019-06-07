@@ -227,8 +227,7 @@ class CoreModel {
 	* @param bool end (Fermer le client ou laisser ouvert) 
 	* @return object (JSON)
 	*/
-	update(table, data_condition, data_update, end) {
-		var end = typeof end == "undefined" ? true : end;
+	update(table, data_condition, data_update, end = true) {
 		var model = this;
 		return new Promise(function(resolve, reject) {
 			if(model.dberror) {
@@ -280,7 +279,6 @@ class CoreModel {
 					model.client.query(querystring, (err, res) => {
 						//console.log(err, res)
 						if(err == null) {
-							var id = res.rows[0].id;
 							resolve({status:1, message: "Suppression réussie"});
 						} else {
 							debug(err);
@@ -374,9 +372,9 @@ class CoreModel {
 			if(_.keys(data).length > 1) {
 				return _.reduce(data, function(cond, val, i) {
 					if((cond+"").contains("', ")) {
-						return cond + ", "+i+" = '"+val.replace("'","''")+"'";
+						return cond + ", "+i+" = '"+(""+val).replace("'","''")+"'";
 					} else {
-						return _.keys(data)[0]+" = '"+cond.replace("'","''")+"', "+i+" = '"+val.replace("'","''")+"'";
+						return _.keys(data)[0]+" = '"+ (""+cond).replace("'","''")+"', "+i+" = '"+(""+val).replace("'","''")+"'";
 					}
 				});
 			} else if(_.keys(data).length == 1) {

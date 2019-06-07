@@ -1,14 +1,11 @@
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const fs = require('fs');
-//To activate : in console (DEBUG=app:startup npm run start)
-//To desactivate : in console (DEBUG= npm run start)
-global.debug = require('debug')('app:startup');
-global.message = require("./shared/messages_fr");
-global.utilities = require("./shared/utilities");
-global.error = require("./shared/errors");
-global._ = require('underscore');
+const express = require('express')
+const app = express()
+const bodyParser = require('body-parser')
+const fs = require('fs')
+require('./shared/global')
+
+//To activate debug : in console (npm run start:debug)
+//To desactivate : in console (npm run start)
 
 debug(utilities);
 debug(utilities.getRndInteger(15, 59));
@@ -40,7 +37,7 @@ app.use(require("./middlewares/auth"));
 const controllers_files = fs.readdirSync('./controllers');
 debug(controllers_files);
 controllers_files.forEach((controller) => {
-  app.use(require("./controllers/" + controller));
+  if(controller !== "__tests__") app.use(require("./controllers/" + controller));
 });
 
 
