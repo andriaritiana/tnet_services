@@ -7,7 +7,7 @@ const cooperative = cooperatives[getRndInteger(0, cooperatives.length - 1)]
 const VilleModel = require('../ville_model')
 const model = new VilleModel(cooperative)
 
-describe.only('Ville model', () => {
+describe('Ville model', () => {
   debug(cooperative)
   const newVille = {
     ville_id: getRndInteger(80, 2000),

@@ -1,6 +1,6 @@
-##### tnet_services
+# transnet services (tnet_services)
 Version: 1.0
-Authors: andri (andriaritiana@yahoo.fr), nav (iandrinaval@gmail.com)
+Authors: andri, nav
 
 ##### Environment
 For db configs, open config and create a local.json file if there is not and enter your db_config
