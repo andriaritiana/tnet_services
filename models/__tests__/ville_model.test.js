@@ -42,19 +42,28 @@ describe('Ville model', () => {
       model.update_ville({ prov_id: 2, ville_nom: 'Test_ville' }, { ville_id: newVille.ville_id }, false)
       .then( (res) => {
         expect(res.status).to.equals(1)
-        //TODO Find the element in db and should be modified
-        done()
+        model.select('ville', {ville_id: newVille.ville_id }, {}, false, 0, 0, false)
+        .then( (villeRes) => {
+          expect(villeRes.status).to.equals(1)
+          expect(villeRes.data[0].prov_id).to.equals(2)
+          expect(villeRes.data[0].ville_nom).to.equals('Test_ville')
+          done()
+        })
       })
     })
   })
   
   describe('delete_ville', () => {
     it('Should delete the inserted ville', (done) => {
-      model.delete_ville({ ville_id: newVille.ville_id })
+      model.delete_ville({ ville_id: newVille.ville_id }, false)
       .then( (res) => {
         expect(res.status).to.equals(1)
-        //TODO Find the element in db and should not be there
-        done()
+        model.select('ville', {ville_id: newVille.ville_id }, {})
+        .then( (villeRes) => {
+          expect(villeRes.status).to.equals(1)
+          expect(villeRes.data.length).to.equals(0)
+          done()
+        })
       })
     })
   })

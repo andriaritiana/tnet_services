@@ -272,7 +272,7 @@ describe('Core Model test', async () => {
       coreModel.delete('cooperative', {"coop_sousdomaine like": "coopT%"}, false).
       then((res) => {
         expect(res.status).to.equals(1)
-        coreModel.select('cooperative', {"coop_sousdomaine like": "coopT%"}, [], false, 0, 0, false)
+        coreModel.select('cooperative', {"coop_sousdomaine like": "coopT%"}, [], false, 0, 0, true)
         .then( (deleted) => {
           expect(deleted.status).to.equals(1)
           expect(deleted.data.length).to.equals(0)
