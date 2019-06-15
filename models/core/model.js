@@ -104,14 +104,17 @@ class CoreModel {
 				if(!_.isEmpty(join)) {
 					let jointure = "";
 					if(_.isArray(join)) {
-						jointure += "join " + _.reduce(join, (joins, jn) => {
-							return `${joins} join ${jn}`
+					
+						jointure += _.reduce(join, (joins, jn, i) => {
+							if(_.isArray(jn)) {
+								return `${i == 1 ?  _.isArray(join[0]) ? ` ${join[0][2] ? join[0][2] : ''} join ${join[0][0]} on ${join[0][1]}` : ` join ${join[0]}` : joins} ${jn[2] ? jn[2] : ''} join ${jn[0]} on ${jn[1]}`
+							} else return `${i == 1 ?  _.isArray(join[0]) ? ` ${join[0][2] ? join[0][2] : ''} join ${join[0][0]} on ${join[0][1]}` : ` join ${join[0]}` : joins} join ${jn}`
 						})
 					} else if(_.isObject(join)) {
 						debug('object')
 						_.keys(join).forEach((index) => {
 							if(_.isArray(join[index]))jointure += `${join[index][1]} join ${index} on ${join[index][0]}`
-							else jointure += `join ${index} on ${join[index]}`
+							else jointure += ` join ${index} on ${join[index]}`
 						})
 					} else {
 						jointure += "join "+join+" ";
