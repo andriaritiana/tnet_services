@@ -186,17 +186,48 @@ describe('Core Model test', async () => {
         expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'ville_nom')
         expect(res.data[0].prov_id).to.equals(1)
         expect(res.data[0]).to.not.have.any.keys('prov_description', 'ville_id')
+      })
+      coreModel.select_join('province', {ville: ["province.prov_id = ville.prov_id", "inner"]}, {}, ['province.prov_id', 'prov_nom', 'ville_nom'], false, 10, 4, false, 'prov_id').
+      then( (res) => {
+        expect(res.status).to.equals(1)
+        expect(res.data.length).to.equals(10)
+        expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'ville_nom')
+        expect(res.data[0].prov_id).to.equals(1)
+        expect(res.data[0]).to.not.have.any.keys('prov_description', 'ville_id')
         done()
       })
     })
 
     it('Should return rows from specified table with the specified condition', (done) => {
       coreModel.loadDatabase('default')
-      coreModel.select_join('province', {ville: "province.prov_id = ville.prov_id"}, {"ville.prov_id": 2}, [], false, 0, 0, true, '').
+      coreModel.select_join('province', [["ville", "province.prov_id = ville.prov_id", "inner"]], {"ville.prov_id": 2}, [], false, 0, 0, false, '').
       then( (res) => {
         expect(res.status).to.equals(1)
         expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'prov_description', 'ville_id', 'ville_nom')
         expect(res.data[0].prov_id).to.equals(2)
+      })
+      coreModel.select_join('province', ["ville on province.prov_id = ville.prov_id"], {"ville.prov_id": 2}, [], false, 0, 0, false, '').
+      then( (res) => {
+        expect(res.status).to.equals(1)
+        expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'prov_description', 'ville_id', 'ville_nom')
+        expect(res.data[0].prov_id).to.equals(2)
+        done()
+      })
+    })
+
+    it('Should return rows from specified table with multiple join with array passed parameter', (done) => {
+      coreModel.loadDatabase('default')
+      coreModel.select_join('province', [["ville", "province.prov_id = ville.prov_id", "inner"], ["itineraire", "itineraire.itin_depart = ville.ville_id"], ["coop_itin", "coop_itin.itin_id = itineraire.itin_id"]], {"ville.prov_id": 3}, [], false, 10, 0, false, '').
+      then( (res) => {
+        expect(res.status).to.equals(1)
+        expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'prov_description', 'ville_id', 'ville_nom', 'coop_id', 'itin_id', 'copitin_frais', 'itin_depart', 'itin_arrivee')
+        expect(res.data[0].prov_id).to.equals(3)
+      })
+      coreModel.select_join('province', ["ville on province.prov_id = ville.prov_id", "itineraire on itineraire.itin_depart = ville.ville_id", "coop_itin on coop_itin.itin_id = itineraire.itin_id"], {"ville.prov_id": 3}, [], false, 10, 0, false, '').
+      then( (res) => {
+        expect(res.status).to.equals(1)
+        expect(res.data[0]).to.have.all.keys('prov_id', 'prov_nom', 'prov_description', 'ville_id', 'ville_nom', 'coop_id', 'itin_id', 'copitin_frais', 'itin_depart', 'itin_arrivee')
+        expect(res.data[0].prov_id).to.equals(3)
         done()
       })
     })
