@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const fs = require('fs')
+const cors = require('cors')
 require('./shared/global')
 
 //To activate debug : in console (npm run start:debug)
@@ -10,6 +11,8 @@ require('./shared/global')
 debug(utilities);
 debug(utilities.getRndInteger(15, 59));
 app.set('view engine', 'ejs');
+app.use(cors());
+debug('CORS Allow origin initialized');
 app.use(function (req, res, next) {
 
   // Website you wish to allow to connect
