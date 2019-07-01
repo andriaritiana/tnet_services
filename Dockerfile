@@ -6,14 +6,11 @@ RUN apt-get update -yq \
 && apt-get install nodejs -yq \
 && apt-get clean -y
 
-ADD . /app/
-WORKDIR /app
+ADD . /app-service/
+WORKDIR /app-service
 RUN npm install
-
-EXPOSE 3000
-VOLUME /app
 
 #RUN npm run override:populate
 
 #ENTRYPOINT npm run override:populate
-CMD npm run start:debug
+EXPOSE 3000
