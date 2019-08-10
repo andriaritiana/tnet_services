@@ -4,8 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "test": "NODE_ENV=test DEBUG=app:test mocha --exit config controllers/__tests__ models/__tests__ models/core/__tests__  shared/__tests__ --recursive",
+    "test:all": "NODE_ENV=test npm run purge && NODE_ENV=test npm run populate && npm run test",
+    "start": "DEBUG= nodemon index.js",
+    "start:debug": "DEBUG=app:startup nodemon index.js",
+    "populate": "DEBUG=app:population node db/seeders.js",
+    "override:populate": "npm run purge && npm run populate",
+    "purge": "DEBUG=app:purge node db/seeders.js"
   },
   "repository": {
     "type": "git",
@@ -22,12 +27,17 @@
   "homepage": "https://github.com/andriaritiana/tnet_services#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "config": "^2.0.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "config": "^2.0.2",
+    "cors": "^2.8.5",
     "debug": "^3.1.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
     "express-generator": "^4.13.4",
     "joi": "^13.5.2",
+    "mocha": "^6.1.4",
+    "moment": "^2.24.0",
     "node-walker": "^0.1.0",
     "nodemon": "^1.17.5",
     "pg": "^7.4.3",

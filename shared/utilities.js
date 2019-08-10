@@ -9,13 +9,13 @@ let functions = {
         //debug(list);
         return new Promise( async (resolve, reject) => {
             if(_.isArray(list)) {
-                for(let i = 0; i < list.length; i++) {
-                    await callback(list[i], i, list);
-                }
+                await Promise.all(
+                    list.map( (elem, i, list) => callback(elem, i, list))
+                )
             } else if(_.isObject(list)) {
-                for(let key in list) {
-                    await callback(list[key], key, list);
-                }
+                await Promise.all(
+                    _.map( list, (elem, i, list) => callback(elem, i, list))
+                )
             } else {
                 reject(false);
             }
@@ -23,6 +23,11 @@ let functions = {
         });
         
     },
+
+    //trim function
+    trim: (x) => {
+        return x.replace(/^\s+|\s+$/gm,'');
+    }
 
 }
 

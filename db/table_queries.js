@@ -1,4 +1,4 @@
-let tables = {
+const queries = {
 "chauffeur" : ["create table chauffeur ( chauf_id    serial  not null, chauf_nom   varchar(100) null, chauf_tel   varchar(50) null, constraint pk_chauffeur primary key (chauf_id) )",
                 "create unique index chauffeur_pk on chauffeur (chauf_id )"],
 "chauffvehic": ["create table chauffvehic ( chaufvehic_id  serial  not null, vehic_numero  character varying(8) not null, chauf_id    integer not null, chaufvehic_date  date null, constraint pk_chauffvehic primary key (chaufvehic_id) )",
@@ -86,4 +86,4 @@ let tables = {
                 "alter table voyage add constraint fk_voyage_as_14_classe_v foreign key (clv_id)    references classe_vehicule (clv_id)    on delete restrict on update restrict"]
 };
 
-module.exports = tables;
+module.exports = queries;

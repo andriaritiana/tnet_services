@@ -1,2 +1,5 @@
 node_modules/
 node-postgres-todo/
+
+package-lock.json
+config/local*
