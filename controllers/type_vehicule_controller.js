@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 
 const TypeVehiculeModel = require("../models/type_vehicule_model");
-const model = new TypeVehiculeModel(cooperative_name);
+const model = new TypeVehiculeModel();
 
 router.get('/type_vehicule',  (req, res) => {
   model.get_all_type_vehicules()

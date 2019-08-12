@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 
 const CatVehiculeModel = require("../models/cat_vehicule_model");
-const model = new CatVehiculeModel(cooperative_name);
+const model = new CatVehiculeModel();
 
 router.get('/cat_vehicule',  (req, res) => {
   model.get_all_cat_vehicules()

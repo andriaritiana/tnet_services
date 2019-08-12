@@ -7,7 +7,7 @@ const cooperative = cooperatives[getRndInteger(0, cooperatives.length - 1)]
 const CoopModel = require('../cooperative_model')
 const model = new CoopModel("default")
 
-describe.only('Cooperative model', () => {
+describe('Cooperative model', () => {
   debug(`Base sélectionnée pour le test : ${cooperative}`)
   const newCoop = { coop_sousdomaine: 'newCoopTest',
                     coop_abrev: 'newCoopTest',

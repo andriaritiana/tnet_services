@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 
 const CooperativeModel = require("../models/cooperative_model");
-const model = new CooperativeModel(cooperative_name);
+const model = new CooperativeModel();
 
 router.get('/cooperative',  (req, res) => {
   model.get_all_cooperatives()

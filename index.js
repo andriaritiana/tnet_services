@@ -15,7 +15,7 @@ app.use(cors());
 app.use(function (req, res, next) {
 
   // Website you wish to allow to connect
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4000');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   debug('CORS Allow origin initialized into docker path');
 
   // Request methods you wish to allow

@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 
 const ListageModel = require("../models/listage_model");
-model = new ListageModel(cooperative_name);
+model = new ListageModel();
 
 router.get('/listage',  (req, res) => {
   model.get_all_listages()

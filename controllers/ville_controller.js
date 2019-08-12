@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 
 const VilleModel = require("../models/ville_model");
-const model = new VilleModel(cooperative_name);
+const model = new VilleModel();
 
 router.get('/ville',  (req, res) => {
   model.get_all_villes()
