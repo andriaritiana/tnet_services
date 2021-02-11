@@ -33,11 +33,11 @@ class GuichetModel extends Model {
   	return this.update("guichetier", condition, info, closeConnection);
   }
 
-  get_params(id_guichet) {
-  	var params = this.select("parametre", {guichet_id: id_guichet}, {});
+  get_params(id_guichet, closeConnection = true) {
+  	var params = this.select("parametre", {guichet_id: id_guichet}, {}, false, 0, 0, closeConnection);
   	if(params.data == undefined || _.isEmpty(params.data)) {
-  		params = this.select("parametre", {}, {});
-  	}
+  		params = this.select("parametre", {}, {}, false, 1, 0, closeConnection);
+    }
   	return params;
   }
 

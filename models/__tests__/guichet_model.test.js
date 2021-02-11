@@ -119,16 +119,19 @@ describe.only('Guichet model', () => {
   describe('get params', () => {
     
     it('Should return the default parameter because the new guichet does not have a parameter', (done) => {
-      model.get_params(guichetToAdd.guichet_id).then(
+      model.get_params(guichetToAdd.guichet_id, false).then(
         (res) => {
           expect(res.status).to.equals(1)
+          expect(res.data[0]).to.be.an('object')
+          expect(res.data[0]).to.have.all.keys('param_id',  'guichet_id',  'param_utiliseclasse',  'param_typevoitureparclasse',  'param_heuredepartfixe',  'param_paramminutearriveavantdepart',  'param_minuteretardtolere',  'param_permutationchauffeur',  'param_reservesansavance',  'param_supprreservesansavanceavant',  'param_supprreservenoncompleteavant',  'param_typevehiculefixeparheuredepart',  'param_frais',  'param_typevehiculereservationpardefaut',
+            'param_nbvehicreservsimultane',  'param_annulerreservparclient')
           done()
         }
       )
     })
 
     it('Should return the default parameter because the new guichet does not have a parameter', (done) => {
-      model.get_params(guichetToAdd.guichet_id).then(
+      model.get_params(guichetToAdd.guichet_id, false).then(
         (res) => {
           expect(res.status).to.equals(1)
           done()
